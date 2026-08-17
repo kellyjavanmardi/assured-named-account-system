@@ -514,7 +514,7 @@
       <div class="pipe-arrow">→</div>
       <div class="pipe-step"><div class="num">05</div><div class="title">Validate Grounding</div><div class="desc">Every cited signal must trace to one actually in the input, or it's rejected</div></div>
       <div class="pipe-arrow">→</div>
-      <div class="pipe-step"><div class="num">06</div><div class="title">Deliver + Log</div><div class="desc">Rendered straight back to the account owner in the dashboard; full run logged to an eval table</div></div>
+      <div class="pipe-step"><div class="num">06</div><div class="title">Deliver + Log</div><div class="desc">Rendered straight back to the account owner in the dashboard; logging to an eval table is designed, not yet wired</div></div>
     </div>
   </section>
 
@@ -597,7 +597,7 @@
       </div>
       <div class="dq-card">
         <div class="trigger">Model output fails grounding</div>
-        <div class="behavior">One retry with a stricter reminder; a second failure routes to the human queue instead of delivering an ungrounded brief.</div>
+        <div class="behavior">Fails closed: flagged as <code class="inline">grounding_failed</code> with the offending citation and never delivered as a brief — no silent pass-through. (Retry-then-escalate is the next step, not yet built.)</div>
       </div>
     </div>
   </section>
@@ -605,7 +605,7 @@
   <section class="block">
     <div class="block-head">
       <div class="block-title"><span class="dot" style="background:var(--spec-gold)"></span>Trigger &amp; Observability</div>
-      <div class="block-desc">One trigger today, on demand — not a batch job</div>
+      <div class="block-desc">One trigger today, on demand — not a batch job. Trigger, retrieval, and grounding validation are live in the dashboard button; eval, alerting, and logging below are designed, not yet wired to infra.</div>
     </div>
     <div class="stat-row">
       <div class="stat-tile" style="border-top-color:var(--spec-magenta)"><div class="stat-label">Trigger</div><div class="stat-value">Dashboard button</div><div class="stat-sub">Account owner clicks Generate Brief; runs synchronously, ready in seconds</div></div>
@@ -619,7 +619,7 @@
     </div>
   </section>
 
-  <footer class="foot">Code: <code class="inline">agent_account_brief.py</code> · Part 2 opens <code class="inline">build_prompt()</code> live for the account the panel picks</footer>
+  <footer class="foot">Reference implementation: <code class="inline">agent_account_brief.py</code> · the live button runs its Node port, <code class="inline">api/generate-brief.js</code> · Part 2 opens <code class="inline">build_prompt()</code> live for the account the panel picks</footer>
 
   </div>
 </div>
