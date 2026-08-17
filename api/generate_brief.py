@@ -42,7 +42,9 @@ def handler(environ, start_response):
     except ValueError as e:
         return _respond(start_response, 404, {"error": str(e)})
     except Exception as e:
-        return _respond(start_response, 502, {"error": f"agent call failed: {e}"})
+        import os
+        env_names = sorted(k for k in os.environ if "ANTHROPIC" in k.upper())
+        return _respond(start_response, 502, {"error": f"agent call failed: {e}", "_debug_env_names_seen": env_names})
 
     return _respond(start_response, 200, result)
 
