@@ -71,7 +71,7 @@
   .hero-sub { font-size: 13.5px; color: rgba(255,255,255,0.92); margin: 0; position: relative; z-index: 1; font-weight: 500; }
 
   /* ---------- stat row ---------- */
-  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 26px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 26px; }
   .stat-tile { background: var(--surface); border: 1px solid var(--border); border-top: 3px solid; border-radius: 14px; padding: 14px 16px; box-shadow: var(--card-shadow); }
   .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); font-weight: 600; margin-bottom: 6px; }
   .stat-value { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
@@ -828,7 +828,6 @@
 
   document.getElementById('stats').innerHTML = [
     { label: 'Open Pipeline', value: fmtMoney(totalPipeline), sub: '30 named accounts', color: 'var(--spec-blue)' },
-    { label: 'Act Now', value: actNowList.length, sub: 'high intent, no meeting', color: 'var(--spec-magenta)' },
     { label: 'Pilots in Flight', value: pilotCount, sub: 'FNOL live, pre-expansion', color: 'var(--spec-violet)' },
     { label: 'In Production', value: prodCount, sub: 'protect & expand', color: 'var(--spec-gold)' },
     { label: 'Rising Momentum', value: risingCount + ' / 30', sub: 'trailing 4 weeks', color: 'var(--spec-blue)' }
