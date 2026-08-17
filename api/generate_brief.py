@@ -9,8 +9,8 @@ environment variable -- it is never sent to the browser.
 
 GET /api/generate_brief?account=<name>&constraint=<optional>
 
-A plain WSGI app (not a framework) -- this is the callable Vercel's
-Services entrypoint (vercel.json: services.api.entrypoint) loads.
+A plain WSGI app (not a framework) -- `app` is the conventional name
+Vercel's Python runtime auto-discovers for a WSGI/ASGI callable.
 """
 
 import json
@@ -27,7 +27,7 @@ VALID_CONSTRAINTS = {"champion_arming", "save_play", "expansion_push"}
 REASON_PHRASES = {200: "OK", 400: "Bad Request", 404: "Not Found", 502: "Bad Gateway"}
 
 
-def handler(environ, start_response):
+def app(environ, start_response):
     query = parse_qs(environ.get("QUERY_STRING", ""))
     account = (query.get("account", [""])[0] or "").strip()
     constraint = query.get("constraint", [None])[0]
