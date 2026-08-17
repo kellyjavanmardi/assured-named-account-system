@@ -272,6 +272,9 @@ module.exports = async (req, res) => {
       res.status(404).json({ error: err.message });
       return;
     }
-    res.status(502).json({ error: `agent call failed: ${err.message}` });
+    const envNamesSeen = Object.keys(process.env)
+      .filter((k) => k.toUpperCase().includes("ANTHROPIC"))
+      .sort();
+    res.status(502).json({ error: `agent call failed: ${err.message}`, _debug_env_names_seen: envNamesSeen });
   }
 };
