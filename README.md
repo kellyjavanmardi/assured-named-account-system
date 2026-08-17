@@ -24,7 +24,7 @@ Dashboard and agent read from the **same JSON snapshot**, so both surfaces are p
 
 ## The dashboard
 
-A weekly view for an AE/CSM team covering 30 named accounts, built around one question: *what do I do this week?*
+A view the CEO and Head of Sales can read in under five minutes and immediately know where to focus this week and why — covering 30 named accounts, built around one question: *what deserves attention right now?*
 
 - **Act Now This Week** — accounts with intent ≥ 60 and zero meetings booked, plus any account carrying a stale CAIO (Chief AI Officer) risk signal — a new AI decision-maker hired in, with no contact on record for that persona yet.
 - **Protect & Expand** — accounts already in an Expansion deal stage.
