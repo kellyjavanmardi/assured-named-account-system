@@ -1,0 +1,290 @@
+<title>Assured — Account-Brief Generator: Agent Architecture</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page-bg: #f6f7f9;
+    --surface: #ffffff;
+    --surface-2: #f1f2f5;
+    --border: rgba(0,0,0,0.10);
+    --ink-primary: #0a0a0a;
+    --ink-secondary: #4e555d;
+    --ink-muted: #9199a6;
+    --grid-line: #e6e7eb;
+    --accent: #7a44ff;
+    --good: #1ba3ef;
+    --warning: #f7bd15;
+    --warning-text: #9a6b00;
+    --serious: #f48a16;
+    --critical: #de193c;
+    --tint: 14%;
+    --card-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    --spec-blue: #1ba3ef;
+    --spec-violet: #7a44ff;
+    --spec-magenta: #e438aa;
+    --spec-gold: #f7bd15;
+    --spec-orange: #f48a16;
+    --spec-red: #de193c;
+    --grad-1: #1ba3ef;
+    --grad-2: #7a44ff;
+    --grad-3: #f7bd15;
+    --grad-4: #e438aa;
+    --cta-bg: #f7bd15;
+    --cta-ink: #14110a;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--page-bg);
+    color: var(--ink-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .app { max-width: 1080px; margin: 0 auto; padding: 28px 24px 72px; }
+
+  .nav-strip {
+    display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    padding: 4px 2px 16px; flex-wrap: wrap; border-bottom: 1px solid var(--border); margin-bottom: 18px;
+  }
+  .brand-row { display: flex; align-items: center; gap: 8px; }
+  .logo-mark { width: 20px; height: 17px; flex-shrink: 0; }
+  .wordmark { font-size: 14px; font-weight: 700; color: var(--ink-primary); letter-spacing: -0.01em; }
+  .top-meta { text-align: right; font-size: 12px; color: var(--ink-muted); }
+  .top-meta strong { color: var(--ink-secondary); font-weight: 600; }
+
+  .hero-band {
+    position: relative; overflow: hidden; border-radius: 20px; margin-bottom: 26px;
+    padding: 30px 30px; background: linear-gradient(100deg, var(--grad-1) 0%, var(--grad-2) 32%, var(--grad-3) 66%, var(--grad-4) 100%);
+  }
+  .hero-band::before, .hero-band::after {
+    content: ""; position: absolute; border-radius: 50%; filter: blur(2px); opacity: 0.55; pointer-events: none;
+  }
+  .hero-band::before { width: 140px; height: 140px; background: radial-gradient(circle at 35% 35%, #ffffffbb, #ffffff00 70%); top: -50px; right: 60px; }
+  .hero-band::after { width: 90px; height: 90px; background: radial-gradient(circle at 35% 35%, #ffffff99, #ffffff00 70%); bottom: -30px; right: 200px; }
+  h1 { font-size: 25px; font-weight: 800; margin: 0 0 6px; letter-spacing: -0.01em; text-wrap: balance; color: #ffffff; position: relative; z-index: 1; }
+  .hero-sub { font-size: 13.5px; color: rgba(255,255,255,0.92); margin: 0; position: relative; z-index: 1; font-weight: 500; max-width: 640px; }
+
+  section.block { margin-bottom: 30px; }
+  .block-head { margin-bottom: 12px; }
+  .block-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-primary); display: flex; align-items: center; gap: 8px; }
+  .block-title .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .block-desc { font-size: 12.5px; color: var(--ink-muted); margin-top: 3px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--card-shadow); padding: 18px 20px; }
+
+  /* connect banner */
+  .connect-banner {
+    display: flex; gap: 14px; align-items: flex-start; padding: 16px 18px; border-radius: 16px;
+    background: var(--surface-2); border: 1px dashed var(--border); font-size: 13px; color: var(--ink-secondary); margin-bottom: 30px;
+  }
+  .connect-banner b { color: var(--ink-primary); }
+  .connect-icon { font-size: 17px; flex-shrink: 0; }
+
+  /* pipeline */
+  .pipeline { display: flex; gap: 8px; flex-wrap: wrap; align-items: stretch; }
+  .pipe-step {
+    flex: 1 1 150px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 13px 14px; box-shadow: var(--card-shadow); position: relative; border-top: 3px solid var(--accent);
+  }
+  .pipe-step .num { font-size: 10px; font-weight: 800; color: var(--ink-muted); letter-spacing: 0.05em; }
+  .pipe-step .title { font-size: 13px; font-weight: 700; margin: 3px 0 4px; }
+  .pipe-step .desc { font-size: 11.5px; color: var(--ink-secondary); line-height: 1.4; }
+  .pipe-arrow { display: flex; align-items: center; color: var(--ink-muted); font-size: 16px; padding: 0 2px; flex-shrink: 0; }
+  @media (max-width: 900px) { .pipe-arrow { display: none; } }
+
+  /* two col */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+  .io-card h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 10px; color: var(--ink-muted); font-weight: 700; }
+  .io-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+  .io-list li { font-size: 12.5px; color: var(--ink-secondary); padding-left: 14px; position: relative; }
+  .io-list li::before { content: "—"; position: absolute; left: 0; color: var(--ink-muted); }
+  .io-list b { color: var(--ink-primary); }
+
+  /* schema */
+  pre.schema {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px;
+    font-family: var(--mono); font-size: 12px; line-height: 1.6; overflow-x: auto; box-shadow: var(--card-shadow); margin: 0;
+  }
+  .k { color: var(--spec-violet); }
+  .s { color: var(--spec-blue); }
+  .c { color: var(--ink-muted); font-style: italic; }
+
+  /* status chips row for data quality */
+  .dq-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .dq-card { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--serious); border-radius: 14px; padding: 14px 16px; box-shadow: var(--card-shadow); }
+  .dq-card .trigger { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--serious); margin-bottom: 6px; }
+  .dq-card .behavior { font-size: 12.5px; color: var(--ink-secondary); line-height: 1.5; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .stat-tile { background: var(--surface); border: 1px solid var(--border); border-top: 3px solid; border-radius: 14px; padding: 13px 15px; box-shadow: var(--card-shadow); }
+  .stat-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted); font-weight: 700; margin-bottom: 5px; }
+  .stat-value { font-size: 14px; font-weight: 700; }
+  .stat-sub { font-size: 11px; color: var(--ink-secondary); margin-top: 2px; }
+
+  code.inline { font-family: var(--mono); font-size: 11.5px; background: var(--surface-2); padding: 1px 6px; border-radius: 5px; color: var(--spec-violet); }
+
+  footer.foot { margin-top: 8px; text-align: center; font-size: 11.5px; color: var(--ink-muted); padding-top: 20px; border-top: 1px solid var(--border); }
+</style>
+
+<div class="app">
+  <div class="nav-strip">
+    <div class="brand-row">
+      <svg class="logo-mark" viewBox="0 0 48 40" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="assuredGrad" x1="0" y1="40" x2="48" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#1ba3ef"/>
+            <stop offset="50%" stop-color="#7a44ff"/>
+            <stop offset="100%" stop-color="#e438aa"/>
+          </linearGradient>
+        </defs>
+        <polygon points="6,40 16,14 26,40" fill="url(#assuredGrad)" opacity="0.55"/>
+        <polygon points="16,40 27,8 38,40" fill="url(#assuredGrad)" opacity="0.8"/>
+        <polygon points="26,40 38,4 48,40" fill="url(#assuredGrad)"/>
+      </svg>
+      <span class="wordmark">Assured · Named-Account Marketing</span>
+    </div>
+    <div class="top-meta">Part 1 — Agentic Workflow · <strong>Account-Brief Generator</strong></div>
+  </div>
+
+  <div class="hero-band">
+    <h1>Account-Brief Generator</h1>
+    <p class="hero-sub">A system that turns the dashboard's "act now" list into a grounded, pre-meeting brief and next-best-action for every account owner — on a schedule, not a chat window.</p>
+  </div>
+
+  <div class="connect-banner">
+    <span class="connect-icon">↳</span>
+    <div><b>How this connects to Part 1's dashboard:</b> the weekly batch below runs on exactly the accounts the dashboard's Act Now and Pilots in Flight sections surface — same query, same source of truth. Every <code class="inline">Momentum Signal</code> the dashboard shows as "why now" is the same field this agent's prompt reads. Part 2 is this system's <code class="inline">build_prompt()</code> function, opened up and run live for whichever account the panel picks.</div>
+  </div>
+
+  <section class="block">
+    <div class="block-head">
+      <div class="block-title"><span class="dot" style="background:var(--spec-violet)"></span>Focus</div>
+      <div class="block-desc">One agent, adaptive next-best-action — not three separate agents</div>
+    </div>
+    <div class="card" style="font-size:13px; color:var(--ink-secondary); line-height:1.6;">
+      Pulls an account's row, its top contacts, and its recent signals, and drafts a tight pre-meeting brief with a <b style="color:var(--ink-primary)">recommended next-best-action</b>. The action itself adapts to context: book-a-meeting for a high-intent no-touch account, a build-vs-buy objection play when a CAIO risk is flagged, a save play if a pilot is asked to be treated as cooling. One prompt template, one output contract — not three separate agents to maintain.
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <div class="block-title"><span class="dot" style="background:var(--spec-blue)"></span>Orchestration Pipeline</div>
+      <div class="block-desc">Retrieve → gate → assemble → call → validate → deliver → log</div>
+    </div>
+    <div class="pipeline">
+      <div class="pipe-step"><div class="num">01</div><div class="title">Retrieve</div><div class="desc">Join account + contacts + signals from the warehouse (mirrors the dashboard's own query)</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step"><div class="num">02</div><div class="title">Quality Gate</div><div class="desc">Check for thin data <i>before</i> spending a model call — route to fallback if unusable</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step"><div class="num">03</div><div class="title">Assemble Prompt</div><div class="desc"><code class="inline">build_prompt()</code> — the Part 2 function, parameterized on account/contacts/signals/constraint</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step"><div class="num">04</div><div class="title">Call Claude</div><div class="desc">claude-opus-5, output schema enforced via structured outputs — not a prompt instruction</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step"><div class="num">05</div><div class="title">Validate Grounding</div><div class="desc">Every cited signal must trace to one actually in the input, or it's rejected</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step"><div class="num">06</div><div class="title">Deliver + Log</div><div class="desc">Slack + CRM note to the account owner; full run logged to an eval table</div></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <div class="block-title"><span class="dot" style="background:var(--spec-magenta)"></span>Inputs &amp; Output Contract</div>
+    </div>
+    <div class="two-col">
+      <div class="card io-card">
+        <h3>Inputs (per account)</h3>
+        <ul class="io-list">
+          <li><b>Account row</b> — tier, intent + trend, buying/deal stage, pilot status, pipeline, momentum note (warehouse table, 6sense-fed)</li>
+          <li><b>Top contacts</b> — up to 3, ranked by seniority then engagement (Clay-enriched)</li>
+          <li><b>Recent signals</b> — last 45 days, ranked by strength + recency (influ2 / HockeyStack / 6sense / Clay)</li>
+          <li><b>Quality flags</b> — computed by the gate step, e.g. <code class="inline">caio_roster_stale</code>, <code class="inline">dormant_60d</code></li>
+          <li><b>Constraint</b> <i>(optional)</i> — <code class="inline">champion_arming</code> / <code class="inline">save_play</code> / <code class="inline">expansion_push</code>, the live-curveball lever</li>
+        </ul>
+      </div>
+      <div class="card io-card">
+        <h3>Output contract</h3>
+        <pre class="schema">{
+  <span class="k">"account"</span>: <span class="s">string</span>,
+  <span class="k">"situation_summary"</span>: <span class="s">string</span>,
+  <span class="k">"key_signals"</span>: [
+    { <span class="k">"date"</span>, <span class="k">"type"</span>, <span class="k">"detail"</span> }
+  ], <span class="c">// must trace to input</span>
+  <span class="k">"risk_or_opportunity"</span>: <span class="s">string</span>,
+  <span class="k">"next_best_action"</span>: {
+    <span class="k">"action"</span>, <span class="k">"rationale"</span>
+  },
+  <span class="k">"confidence"</span>: <span class="s">"high"|"medium"|"low"</span>,
+  <span class="k">"data_gaps"</span>: [<span class="s">string</span>]
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <div class="block-title"><span class="dot" style="background:var(--spec-red)"></span>Guardrails</div>
+      <div class="block-desc">Two layers — a system-prompt instruction the model follows, and code that checks it after the fact</div>
+    </div>
+    <div class="dq-grid">
+      <div class="dq-card" style="border-left-color:var(--spec-red)">
+        <div class="trigger" style="color:var(--spec-red)">Not grounded</div>
+        <div class="behavior">System prompt: never invent a signal, date, contact, or number. Enforced twice — once as an instruction, once by <code class="inline">validate_grounding()</code> checking every cited signal against the real input after generation.</div>
+      </div>
+      <div class="dq-card" style="border-left-color:var(--spec-red)">
+        <div class="trigger" style="color:var(--spec-red)">Carrier compliance</div>
+        <div class="behavior">No coverage, liability, or claims-outcome determinations. No promised ROI, timeline, or regulatory outcome not present in the input — recommend, don't commit.</div>
+      </div>
+      <div class="dq-card" style="border-left-color:var(--spec-red)">
+        <div class="trigger" style="color:var(--spec-red)">Cross-account leakage</div>
+        <div class="behavior">Each brief is scoped to one carrier only — never reference another carrier's data, deals, or contacts when writing about this account.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <div class="block-title"><span class="dot" style="background:var(--serious)"></span>Handling Bad or Missing Data</div>
+      <div class="block-desc">The gate runs before the model call — Claude never has to improvise on thin data</div>
+    </div>
+    <div class="dq-grid">
+      <div class="dq-card">
+        <div class="trigger">No contacts + no signals</div>
+        <div class="behavior">Skip the Claude call entirely. Route straight to a human-review flag — never let the model guess its way to a plausible-sounding brief with nothing to ground it.</div>
+      </div>
+      <div class="dq-card">
+        <div class="trigger">Days since touch &gt; 60</div>
+        <div class="behavior">Tagged <code class="inline">dormant_Nd</code> and passed explicitly into the prompt, so the brief says "going cold" instead of manufacturing urgency that isn't there.</div>
+      </div>
+      <div class="dq-card">
+        <div class="trigger">CAIO signal predates contact record</div>
+        <div class="behavior">Same staleness check as the dashboard — flagged as <code class="inline">caio_roster_stale</code> and surfaced in <code class="inline">data_gaps</code> rather than assumed resolved.</div>
+      </div>
+      <div class="dq-card">
+        <div class="trigger">Product signal, no CRM pilot</div>
+        <div class="behavior">Verified in the raw data: 7 of 30 accounts carry a "Pilot Milestone" signal while their CRM Pilot Status says None — product usage and CRM state have drifted apart. Flagged as <code class="inline">pilot_signal_status_mismatch</code> so the brief doesn't imply a pilot that isn't on record.</div>
+      </div>
+      <div class="dq-card">
+        <div class="trigger">Model output fails grounding</div>
+        <div class="behavior">One retry with a stricter reminder; a second failure routes to the human queue instead of delivering an ungrounded brief.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <div class="block-title"><span class="dot" style="background:var(--spec-gold)"></span>Scheduling &amp; Observability</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-tile" style="border-top-color:var(--spec-blue)"><div class="stat-label">Weekly Batch</div><div class="stat-value">Sun 18:00 ET</div><div class="stat-sub">Act Now + Pilots list, ahead of Monday review</div></div>
+      <div class="stat-tile" style="border-top-color:var(--spec-magenta)"><div class="stat-label">On-Demand</div><div class="stat-value">Meeting booked</div><div class="stat-sub">CRM webhook fires a single synchronous call</div></div>
+      <div class="stat-tile" style="border-top-color:var(--spec-violet)"><div class="stat-label">Golden Set</div><div class="stat-value">5 accounts</div><div class="stat-sub">Hand-graded, scored weekly by Claude-as-judge</div></div>
+      <div class="stat-tile" style="border-top-color:var(--spec-gold)"><div class="stat-label">Alerting</div><div class="stat-value">&gt;5% fail rate</div><div class="stat-sub">Grounding-check failures page the on-call owner</div></div>
+      <div class="stat-tile" style="border-top-color:var(--spec-orange)"><div class="stat-label">Every run logs</div><div class="stat-value">input · output</div><div class="stat-sub">+ prompt version, latency, token cost</div></div>
+    </div>
+  </section>
+
+  <footer class="foot">Code: <code class="inline">agent_account_brief.py</code> · Part 2 opens <code class="inline">build_prompt()</code> live for the account the panel picks</footer>
+</div>
