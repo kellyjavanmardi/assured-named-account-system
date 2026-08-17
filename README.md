@@ -2,8 +2,10 @@
 
 **Part 1** of the AI & Data Marketing Engineer panel exercise: a weekly named-account dashboard and the agentic workflow that powers it, built over the provided synthetic dataset (30 accounts, 42 contacts, 55 signals).
 
-**Live dashboard:** https://claude.ai/code/artifact/afe742d6-4ebf-4bff-9a12-1de8fbd7b017
-*(two tabs — Weekly Dashboard, Agent Architecture. If the link is unavailable, screenshots are below and everything needed to run it locally is in this repo.)*
+**Live dashboard (real Claude calls):** PENDING_VERCEL_URL
+*(two tabs — Weekly Dashboard, Agent Architecture. Click "Generate Brief" on any account — it's a real, live call to claude-opus-5, not a canned preview.)*
+
+**Static fallback:** https://claude.ai/code/artifact/afe742d6-4ebf-4bff-9a12-1de8fbd7b017 — same two tabs; "Generate Brief" shows a clear error there instead of a live result, since a claude.ai Artifact page can't hold an API key (see **Live deploy**, below).
 
 ---
 
@@ -16,7 +18,9 @@
 | `assured-system.html` | Both of the above combined into one tabbed page (what's published at the link) |
 | `agent_account_brief.py` | The agent itself — real, tested Python, not pseudocode |
 | `data/assured_data.json` | The provided dataset, as consumed by both the dashboard and the agent |
+| `api/generate-brief.py` | Vercel serverless function — the real backend behind the dashboard's button |
 | `requirements.txt` | One dependency: the `anthropic` SDK |
+| `vercel.json` | Routes `/` to `assured-system.html`; the rest is Vercel's zero-config Python + static handling |
 
 Dashboard and agent read from the **same JSON snapshot**, so both surfaces are provably looking at one source of truth.
 
@@ -29,7 +33,7 @@ A view the CEO and Head of Sales can read in under five minutes and immediately 
 - **Act Now This Week** — accounts with intent ≥ 60 and zero meetings booked, plus any account carrying a stale CAIO (Chief AI Officer) risk signal — a new AI decision-maker hired in, with no contact on record for that persona yet.
 - **Protect & Expand** — accounts already in an Expansion deal stage.
 - Full sortable/filterable account grid and a pilot-status mini table.
-- A "Generate Brief" button on six accounts that opens a preview of what the **real agent below** produces for that account — clearly labeled **"Agent Preview — Not a Live Call"** because a published Artifact page can't safely hold an API key or make live authenticated calls (no server-side secret storage, CSP blocks arbitrary `fetch()`). The preview text is hand-written to match those six accounts' real data exactly; the agent that actually generates this kind of brief from scratch is a separate, fully working system — see **The agent**, below, and run it yourself with `python agent_account_brief.py`.
+- A "Generate Brief" button on every Act Now, Protect & Expand, and Pilots-in-Flight account — a real, live call to the agent below, not a canned preview. Click it and it retrieves that account's real contacts and signals, runs the quality gate, and calls claude-opus-5 in front of you. See **Live deploy**, below, for how that's wired up safely.
 
 Styling pulls real hex values from assured.com's brand palette, mapped consistently to meaning across the whole page (e.g. magenta = act-now/no-meeting, orange = CAIO-risk specifically, red = cooling/closed-lost only) — not decorative color, every color is a label.
 
@@ -79,6 +83,23 @@ By default this generates a real brief for Progressive under the `champion_armin
 
 ![Agent architecture](screenshots/agent-architecture.png)
 
+## Live deploy
+
+The dashboard's button had to actually call Claude live, not fake it — but a static page (like a published claude.ai Artifact) has nowhere safe to hold an API key: anything in client-side JS is visible to anyone who opens dev tools, regardless of hosting. Plain static hosting doesn't fix that either.
+
+The real fix: `api/generate-brief.py` is a Vercel serverless function. It holds `ANTHROPIC_API_KEY` as a server-side environment variable — never sent to the browser — and runs `run_account_brief()` from `agent_account_brief.py` for real, for whichever account you click. The dashboard's button calls `GET /api/generate-brief?account=<name>`, same-origin, and renders whatever comes back in the agent's real output contract.
+
+```
+Browser click → fetch('/api/generate-brief?account=...')
+             → Vercel Function (holds the API key)
+             → run_account_brief() → claude-opus-5
+             → JSON brief back to the browser
+```
+
+Deployed with GitHub → Vercel: push to `main`, Vercel builds the static files and the Python function together, zero extra config beyond `vercel.json`'s one rewrite (root → `assured-system.html`) and the `ANTHROPIC_API_KEY` environment variable set in the Vercel project (not in this repo — `agent_account_brief.py` never hardcodes a key).
+
+Only real accounts from the dataset are accepted — `get_account()` raises on anything else — so the account name can't be used to inject arbitrary text into the prompt.
+
 ## How this connects to Part 2
 
 `build_prompt()` in `agent_account_brief.py` is the exact dynamic-prompt-assembly logic — parameterized on account, contacts, signals, and constraint — that Part 2 opens the hood on live: those become `{{variables}}` in Claude Console, and the constraint becomes the panel's curveball.
@@ -86,7 +107,7 @@ By default this generates a real brief for Progressive under the `champion_armin
 ## Assumptions
 
 - **Retrieval** is a static JSON snapshot standing in for three nightly-synced warehouse tables (6sense, Clay, influ2, HockeyStack) — same shape, no live warehouse connection assumed.
-- **Trigger** is the dashboard's "Generate Brief" button, one account at a time — not a batch/cron job. Designed, not wired to live infra — described in the architecture doc as a credible plan rather than mocked code.
+- **Trigger** is the dashboard's "Generate Brief" button, one account at a time — not a batch/cron job. This part *is* wired to live infra (see **Live deploy**); logging, alerting, and the golden-set eval are designed in the architecture doc, not built.
 - **Model choice**: `claude-opus-5`, with extended thinking explicitly disabled (`thinking: {"type": "disabled"}`) — this is a bounded structured-generation task, not open-ended reasoning, and thinking otherwise shares the token budget with the JSON output.
 - **"Recent" signal** = 45-day lookback window.
 - **"Top contacts"** = ranked by seniority (C-Suite → Director) then by engagement, capped at 3.

@@ -186,6 +186,7 @@
     width: fit-content; transition: background 0.12s, color 0.12s;
   }
   .brief-btn:hover { background: var(--spec-violet); color: #ffffff; }
+  .brief-btn.compact { margin-top: 0; padding: 4px 10px; font-size: 11px; }
   .brief-btn::before { content: "✦"; font-size: 11px; }
 
   .modal-backdrop {
@@ -208,6 +209,12 @@
     letter-spacing: 0.05em; text-transform: uppercase; background: rgba(255,255,255,0.22); color: #ffffff;
     padding: 3px 9px; border-radius: 100px;
   }
+  .modal-preview-badge.live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #ffffff; animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .modal-loading { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 34px 10px; font-size: 12.5px; color: var(--ink-secondary); text-align: center; line-height: 1.5; }
+  .spinner { width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--border); border-top-color: var(--spec-violet); animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .modal-error { font-size: 13px; color: var(--critical); background: color-mix(in srgb, var(--critical) var(--tint), var(--surface)); border-radius: 12px; padding: 16px 18px; line-height: 1.5; }
   .modal-close {
     background: rgba(255,255,255,0.2); border: none; color: #fff; width: 26px; height: 26px; border-radius: 50%;
     font-size: 15px; cursor: pointer; flex-shrink: 0; line-height: 1;
@@ -440,7 +447,7 @@
       <div class="block-desc">FNOL pilots mid-flight — the population that converts to Protect &amp; Expand next</div>
     </div>
     <table class="mini-table">
-      <thead><tr><th>Account</th><th>Stage</th><th>Intent</th><th>Days Since Touch</th><th>Pipeline</th><th>Owner</th></tr></thead>
+      <thead><tr><th>Account</th><th>Stage</th><th>Intent</th><th>Days Since Touch</th><th>Pipeline</th><th>Owner</th><th></th></tr></thead>
       <tbody id="pilots-body"></tbody>
     </table>
   </section>
@@ -637,40 +644,47 @@
   <div class="modal-card">
     <div class="modal-head">
       <div class="modal-head-left">
-        <span class="modal-preview-badge">✦ Agent Preview — Not a Live Call</span>
+        <span class="modal-preview-badge live">✦ Live — calling Claude now</span>
         <span class="modal-account" id="modal-account"></span>
       </div>
       <button class="modal-close" onclick="closeBrief()">✕</button>
     </div>
     <div class="modal-body">
-      <div>
-        <div class="modal-section-label">Situation</div>
-        <div class="modal-summary" id="modal-summary"></div>
+      <div id="modal-loading" class="modal-loading" style="display:none;">
+        <div class="spinner"></div>
+        <div>Retrieving this account's contacts and signals, running the quality gate, calling claude-opus-5&hellip;</div>
       </div>
-      <div>
-        <div class="modal-section-label">Key Signals</div>
-        <div class="modal-signals" id="modal-signals"></div>
-      </div>
-      <div>
-        <div class="modal-section-label">Risk / Opportunity</div>
-        <div class="modal-risk" id="modal-risk"></div>
-      </div>
-      <div>
-        <div class="modal-section-label">Next Best Action</div>
-        <div class="modal-nba">
-          <div class="modal-nba-action" id="modal-nba-action"></div>
-          <div class="modal-nba-rationale" id="modal-nba-rationale"></div>
+      <div id="modal-error" class="modal-error" style="display:none;"></div>
+      <div id="modal-content" style="display:none;">
+        <div>
+          <div class="modal-section-label">Situation</div>
+          <div class="modal-summary" id="modal-summary"></div>
+        </div>
+        <div>
+          <div class="modal-section-label">Key Signals</div>
+          <div class="modal-signals" id="modal-signals"></div>
+        </div>
+        <div>
+          <div class="modal-section-label">Risk / Opportunity</div>
+          <div class="modal-risk" id="modal-risk"></div>
+        </div>
+        <div>
+          <div class="modal-section-label">Next Best Action</div>
+          <div class="modal-nba">
+            <div class="modal-nba-action" id="modal-nba-action"></div>
+            <div class="modal-nba-rationale" id="modal-nba-rationale"></div>
+          </div>
+        </div>
+        <div class="modal-footrow">
+          <span class="modal-section-label" style="margin:0;">Confidence</span>
+          <span class="confidence-chip" id="modal-confidence"></span>
+        </div>
+        <div id="modal-gaps-wrap" style="display:none;">
+          <div class="modal-section-label">Data Gaps</div>
+          <div class="modal-gaps" id="modal-gaps"></div>
         </div>
       </div>
-      <div class="modal-footrow">
-        <span class="modal-section-label" style="margin:0;">Confidence</span>
-        <span class="confidence-chip" id="modal-confidence"></span>
-      </div>
-      <div id="modal-gaps-wrap" style="display:none;">
-        <div class="modal-section-label">Data Gaps</div>
-        <div class="modal-gaps" id="modal-gaps"></div>
-      </div>
-      <div class="modal-note">This is a pre-generated example in the agent's exact output contract (see the Agent Architecture tab) — hand-written from the same dataset to show what the live Claude call produces. It is not calling the API right now.</div>
+      <div class="modal-note">*Triggered by this click, on demand, one account at a time — not a batch job. Where this goes next: auto-firing the moment a meeting is booked (CRM update or calendar event), once Claude is connected to watch for that — not built here, so today you trigger it.</div>
     </div>
   </div>
 </div>
@@ -685,105 +699,17 @@
   const SIGNALS = JSON.parse(document.getElementById('data-signals').textContent);
   const CONTACTS = JSON.parse(document.getElementById('data-contacts').textContent);
 
-  // Hand-written examples in the agent's exact output contract (see Agent
-  // Architecture tab for the schema). Grounded in this account's real rows,
-  // contacts, and signals above — not a live Claude call.
-  const BRIEFS = {
-    'Berkshire / GEICO': {
-      situation_summary: "High web and exec-ad engagement for weeks running, but zero meetings booked this quarter — intent is outpacing outreach.",
-      key_signals: [],
-      risk_or_opportunity: "Opportunity: ICP fit 83, intent 80 and rising, with two Champion-tagged contacts (Carlos Reyes, SVP Claims Ops; Rachel Sullivan, VP Claims) actively engaging — but that hasn't converted into a meeting.",
-      next_best_action: {
-        action: "Book a discovery meeting with Carlos Reyes (SVP Claims Ops) this week, leading with LAE reduction.",
-        rationale: "Two Champion-tagged contacts are engaging with no meeting on the books, and the account is explicitly cost-focused per the CRM note — LAE reduction is the matching angle."
-      },
-      confidence: "medium",
-      data_gaps: ["No discrete Signals-feed event in the last 45 days — the case rests on aggregate engagement (206 web visits, 342 exec-ad impressions in 30d), not a single triggering event."]
-    },
-    'The Hartford': {
-      situation_summary: "FNOL pilot live for WC and commercial lines with a highly engaged champion, but a CAIO-flavored objection signal just surfaced with zero meetings booked this quarter.",
-      key_signals: [
-        { date: "2026-07-25", type: "Exec Ad Click", detail: "CAIO engaged build-vs-buy ad creative" },
-        { date: "2026-07-16", type: "Event Interaction", detail: "Booked booth meeting at Insurtech Connect" }
-      ],
-      risk_or_opportunity: "Risk: someone in a CAIO-type role clicked build-vs-buy messaging on 7/25, but there is no Chief AI Officer contact on file for this account — the objection may be forming with a stakeholder marketing hasn't identified yet.",
-      next_best_action: {
-        action: "Loop in Rachel Sullivan (Chief Innovation Officer, Champion, engagement 72, active as of 7/30) to identify who's evaluating build vs. buy, then send targeted objection-prep ahead of the pilot review.",
-        rationale: "Rachel is the most current, most engaged contact on record and holds the Champion role — she's the fastest path to naming the unidentified CAIO-type stakeholder."
-      },
-      confidence: "medium",
-      data_gaps: ["Build-vs-buy signal (7/25) can't be attributed to a named contact — no Chief AI Officer record exists for this account yet."]
-    },
-    'Progressive': {
-      situation_summary: "FNOL pilot live 6 weeks with a strong accuracy read, but a newly hired CAIO from a hyperscaler is raising build-vs-buy scrutiny — and the contact roster hasn't caught up to the change.",
-      key_signals: [
-        { date: "2026-07-16", type: "Job Change", detail: "New Chief AI Officer hired from a hyperscaler" },
-        { date: "2026-07-13", type: "Exec Ad Click", detail: "3 execs on account clicked the same campaign" },
-        { date: "2026-07-12", type: "Pilot Milestone", detail: "Pilot expanded to property line" }
-      ],
-      risk_or_opportunity: "Risk: the CAIO hire (7/16) postdates the last known activity from the CAIO contact on file (Sarah Martinez, 7/9) — the roster is stale for exactly the persona most likely to push build-in-house.",
-      next_best_action: {
-        action: "Arm Sarah Martinez (champion-tagged CAIO contact, engagement 91) with build-vs-buy objection prep, and verify via Clay whether she's still the CAIO of record.",
-        rationale: "The pilot is working — strong accuracy, expanded to property line. The risk isn't product, it's a new executive re-litigating the build-vs-buy decision without having seen that data."
-      },
-      confidence: "medium",
-      data_gaps: ["CAIO contact record (Sarah Martinez, last active 7/9) predates the 7/16 job-change signal — confirm she's still in the role before treating her as the champion to arm."]
-    },
-    'Nationwide': {
-      situation_summary: "FNOL pilot mid-flight with acute adjuster-capacity pain, but a second consecutive CAIO-hire signal in two weeks means build-vs-buy risk is compounding, not isolated.",
-      key_signals: [
-        { date: "2026-07-30", type: "Job Change", detail: "New Chief AI Officer hired from a hyperscaler" },
-        { date: "2026-07-23", type: "Content Engagement", detail: "Read 3 case studies in one session" },
-        { date: "2026-07-21", type: "Funding / News", detail: "Named new claims core-system replacement" },
-        { date: "2026-07-08", type: "Exec Ad Click", detail: "CAIO engaged build-vs-buy ad creative" }
-      ],
-      risk_or_opportunity: "Risk: a new CAIO (7/30) arrives one week after the existing CAIO contact engaged build-vs-buy ad creative (7/8) and a core-system replacement was named (7/21) — three signals in three weeks pointing at the same objection.",
-      next_best_action: {
-        action: "Get Paul Reddy (Director, FNOL & Intake, Champion) to broker a joint conversation with the incoming CAIO before the core-system RFP process solidifies a build-first mindset.",
-        rationale: "Adjuster-capacity pain is acute and the champion is engaged — but a new CAIO plus an active core-system evaluation is exactly the window where a healthy pilot gets shelved for a build decision made above the champion's head."
-      },
-      confidence: "medium",
-      data_gaps: ["New CAIO signal (7/30) has no matching contact record yet — the existing CAIO contact's last activity (7/26) predates the hire."]
-    },
-    'State Farm': {
-      situation_summary: "In production on FNOL across intake with the CCO championing expansion into triage and subrogation — an active RFP signal suggests the expansion conversation should accelerate, not wait for Q3.",
-      key_signals: [
-        { date: "2026-07-29", type: "Exec Ad Click", detail: "CAIO engaged build-vs-buy ad creative" },
-        { date: "2026-07-17", type: "Funding / News", detail: "Earnings call flagged LAE pressure" },
-        { date: "2026-07-13", type: "RFP / Intent", detail: "Active RFP for claims-intake automation detected" },
-        { date: "2026-07-04", type: "Exec Ad Click", detail: "3 execs on account clicked the same campaign" }
-      ],
-      risk_or_opportunity: "Opportunity: an active RFP for claims-intake automation (7/13) landed weeks before the RFP the account team is expecting in Q3 — this may be an earlier, faster-moving process than planned for.",
-      next_best_action: {
-        action: "Confirm with Jordan Kim (Director, FNOL & Intake, Champion) whether the 7/13 RFP signal is the same Q3 RFP arriving early, and get the triage/subrogation expansion proposal in front of the CCO now.",
-        rationale: "Jordan is the most engaged contact (downloaded the ROI brief 7/22) and sits closest to the RFP process — waiting for a confirmed Q3 timeline risks missing an earlier decision window."
-      },
-      confidence: "medium",
-      data_gaps: ["Cannot confirm from the data whether the 7/13 RFP signal is the same process referenced as 'expected Q3' in the CRM note, or a separate, earlier one."]
-    },
-    'Travelers': {
-      situation_summary: "In production and serving as a reference account with a renewal 90 days out — hiring signals suggest the account is actively scaling the team this pilot proved out.",
-      key_signals: [
-        { date: "2026-07-29", type: "Hiring Signal", detail: "Scaling adjuster-enablement team" },
-        { date: "2026-07-22", type: "Funding / News", detail: "Announced multi-year claims-modernization program" },
-        { date: "2026-07-21", type: "Hiring Signal", detail: "Posted 4 roles for claims-automation / ML engineers" },
-        { date: "2026-07-19", type: "Funding / News", detail: "Named new claims core-system replacement" },
-        { date: "2026-07-09", type: "Job Change", detail: "New Chief Claims Officer appointed" }
-      ],
-      risk_or_opportunity: "Opportunity: a new Chief Claims Officer (7/9) plus active hiring for claims-automation roles (7/21) signals organizational investment lining up right before the 90-day renewal window — a strong moment to expand scope, not just renew.",
-      next_best_action: {
-        action: "Get the demand-package review for BI in front of Nina Foster (Chief Claims Officer, Economic Buyer) ahead of the renewal conversation, framed around the modernization program she's already backing.",
-        rationale: "Renewal is 90 days out and the account is hiring into exactly the roles that would use an expanded Assured footprint — the expansion pitch and the renewal conversation should happen together."
-      },
-      confidence: "high",
-      data_gaps: []
-    }
-  };
+  // No hand-written previews here — the button below calls the live
+  // agent (api/generate-brief.py) and renders whatever it actually
+  // returns, in its real output contract (see Agent Architecture tab).
 
-  window.openBrief = function (accountName) {
-    const b = BRIEFS[accountName];
-    if (!b) return;
-    document.getElementById('modal-account').textContent = accountName;
+  function setModalState(state) {
+    document.getElementById('modal-loading').style.display = state === 'loading' ? '' : 'none';
+    document.getElementById('modal-error').style.display = state === 'error' ? '' : 'none';
+    document.getElementById('modal-content').style.display = state === 'content' ? '' : 'none';
+  }
+
+  function renderBrief(b) {
     document.getElementById('modal-summary').textContent = b.situation_summary;
     document.getElementById('modal-risk').textContent = b.risk_or_opportunity;
     document.getElementById('modal-nba-action').textContent = b.next_best_action.action;
@@ -806,7 +732,44 @@
       gapsWrap.style.display = 'none';
     }
 
+    setModalState('content');
+  }
+
+  window.openBrief = async function (accountName) {
+    document.getElementById('modal-account').textContent = accountName;
     document.getElementById('brief-modal').classList.add('open');
+    setModalState('loading');
+
+    let res, result;
+    try {
+      res = await fetch(`/api/generate-brief?account=${encodeURIComponent(accountName)}`);
+      result = await res.json();
+    } catch (err) {
+      document.getElementById('modal-error').textContent =
+        'Could not reach the live agent from here. This static copy has no backend to call — ' +
+        'see it running for real on the deployed site.';
+      setModalState('error');
+      return;
+    }
+
+    if (!res.ok) {
+      document.getElementById('modal-error').textContent = result.error || 'The agent call failed.';
+      setModalState('error');
+      return;
+    }
+    if (result.status === 'insufficient_data') {
+      document.getElementById('modal-error').textContent = result.reason;
+      setModalState('error');
+      return;
+    }
+    if (result.status === 'grounding_failed') {
+      document.getElementById('modal-error').textContent =
+        "The model's draft didn't pass the grounding check (it cited something not in the input), " +
+        'so it was never delivered. Close this and try again.';
+      setModalState('error');
+      return;
+    }
+    renderBrief(result.brief);
   };
 
   window.closeBrief = function () {
@@ -903,7 +866,7 @@
       </div>
       <div class="acard-why">${firstClause(a['Momentum Signal'])}</div>
       <div class="acard-nba"><span class="nba-label">Next Best Action</span><span class="nba-text">${nba}</span></div>
-      ${BRIEFS[a.Account] ? `<button class="brief-btn" onclick="openBrief('${a.Account}')">Generate Brief</button>` : ''}
+      <button class="brief-btn" onclick="openBrief('${a.Account}')">Generate Brief</button>
     </div>`;
   }).join('');
 
@@ -921,7 +884,7 @@
       </div>
       <div class="acard-why">${firstClause(a['Momentum Signal'])}</div>
       <div class="acard-nba"><span class="nba-label">Next Best Action</span><span class="nba-text">Keep exec sponsor warm ahead of renewal.</span></div>
-      ${BRIEFS[a.Account] ? `<button class="brief-btn" onclick="openBrief('${a.Account}')">Generate Brief</button>` : ''}
+      <button class="brief-btn" onclick="openBrief('${a.Account}')">Generate Brief</button>
     </div>`;
   }).join('');
 
@@ -934,6 +897,7 @@
     <td class="${daysClass(a['Days Since Touch'])}">${a['Days Since Touch']}d</td>
     <td>${fmtMoney(a['Open Pipeline ($)'])}</td>
     <td class="acct-owner">${a['Account Owner']}</td>
+    <td><button class="brief-btn compact" onclick="openBrief('${a.Account}')">Generate Brief</button></td>
   </tr>`).join('');
 
   // ---------- full grid ----------
