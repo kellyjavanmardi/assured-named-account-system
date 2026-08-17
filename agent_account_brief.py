@@ -175,7 +175,10 @@ BRIEF_SCHEMA = {
                         "type": "string",
                         "description": "The bare Signal Type only, exactly as listed (e.g. 'Job Change') — never include the source or strength here.",
                     },
-                    "detail": {"type": "string"},
+                    "detail": {
+                        "type": "string",
+                        "description": "Copied character-for-character from that signal's Detail text above — no additions, no appended commentary, no source or strength. Put your own analysis in risk_or_opportunity or next_best_action instead.",
+                    },
                 },
                 "required": ["date", "type", "detail"],
                 "additionalProperties": False,
@@ -302,10 +305,13 @@ DATA-QUALITY FLAGS (raised by the retrieval layer before you saw this — factor
 {constraint_block}
 
 Produce the account brief now, following the required output schema exactly. \
-Every entry in key_signals must be copied from the RECENT SIGNALS list above — \
-do not summarize two signals into one or add a signal that isn't listed. For each, \
-"type" is the Signal Type word only (e.g. "Job Change") — the source and strength \
-shown in the trailing parentheses are not part of it."""
+Every entry in key_signals is a strict citation, not a place for your own analysis: \
+"type" is the Signal Type word only (e.g. "Job Change"), and "detail" is the exact \
+text after the colon in RECENT SIGNALS, character-for-character — no source, no \
+strength, no appended commentary like "— likely..." or "— suggests...". Do not \
+summarize two signals into one or add a signal that isn't listed. Put everything \
+you want to say about why a signal matters in risk_or_opportunity or \
+next_best_action instead — that's what those fields are for."""
 
 
 # ---------------------------------------------------------------------------
