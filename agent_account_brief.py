@@ -171,7 +171,10 @@ BRIEF_SCHEMA = {
                 "type": "object",
                 "properties": {
                     "date": {"type": "string"},
-                    "type": {"type": "string"},
+                    "type": {
+                        "type": "string",
+                        "description": "The bare Signal Type only, exactly as listed (e.g. 'Job Change') — never include the source or strength here.",
+                    },
                     "detail": {"type": "string"},
                 },
                 "required": ["date", "type", "detail"],
@@ -249,7 +252,7 @@ def build_prompt(
     ) or "No engaged contacts on file for this account."
 
     signal_lines = "\n".join(
-        f"- {s['Date']} · {s['Signal Type']} ({s['Source']}, strength {s['Strength']}): {s['Detail']}"
+        f"- {s['Date']} · {s['Signal Type']}: {s['Detail']} (source: {s['Source']}, strength: {s['Strength']})"
         for s in signals
     ) or "No signals logged in the last 45 days."
 
@@ -300,7 +303,9 @@ DATA-QUALITY FLAGS (raised by the retrieval layer before you saw this — factor
 
 Produce the account brief now, following the required output schema exactly. \
 Every entry in key_signals must be copied from the RECENT SIGNALS list above — \
-do not summarize two signals into one or add a signal that isn't listed."""
+do not summarize two signals into one or add a signal that isn't listed. For each, \
+"type" is the Signal Type word only (e.g. "Job Change") — the source and strength \
+shown in the trailing parentheses are not part of it."""
 
 
 # ---------------------------------------------------------------------------
