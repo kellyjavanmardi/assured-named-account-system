@@ -58,7 +58,7 @@ Trigger (dashboard button) → Retrieve → Quality Gate → Assemble Prompt →
 
 **Output** is a structured JSON brief (`output_config.format: json_schema`, all fields required, `additionalProperties: false`) — not free text — so it can be rendered, logged, or piped into CRM/Slack without a parsing layer.
 
-**Trigger & observability** (designed in `agent-architecture.html`, not wired to live infra — see Assumptions). Deliberately one trigger, not a batch job: the dashboard's "Generate Brief" button *is* the front door — clicking it on any account is what calls `run_account_brief()` for that account, synchronously, in seconds.
+**Trigger & observability** — trigger is wired to live infra; eval/alerting/logging below are designed in `agent-architecture.html`, not yet built (see Assumptions). Deliberately one trigger, not a batch job: the dashboard's "Generate Brief" button *is* the front door — clicking it on any account is what calls `run_account_brief()` for that account, synchronously, in seconds.
 
 | | |
 |---|---|
