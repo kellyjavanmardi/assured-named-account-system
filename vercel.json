@@ -1,9 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "services": {
+    "frontend": { "root": "." },
     "api": { "root": "api/", "entrypoint": "generate_brief:handler" }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": { "service": "api" } }
+    { "source": "/api/(.*)", "destination": { "service": "api" } },
+    { "source": "/(.*)", "destination": { "service": "frontend" } }
   ]
 }
