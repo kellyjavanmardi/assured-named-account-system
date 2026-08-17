@@ -310,14 +310,6 @@
 
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--card-shadow); padding: 18px 20px; }
 
-  /* connect banner */
-  .connect-banner {
-    display: flex; gap: 14px; align-items: flex-start; padding: 16px 18px; border-radius: 16px;
-    background: var(--surface-2); border: 1px dashed var(--border); font-size: 13px; color: var(--ink-secondary); margin-bottom: 30px;
-  }
-  .connect-banner b { color: var(--ink-primary); }
-  .connect-icon { font-size: 17px; flex-shrink: 0; }
-
   /* pipeline */
   .pipeline { display: flex; gap: 8px; flex-wrap: wrap; align-items: stretch; }
   .pipe-step {
@@ -479,11 +471,6 @@
 <div class="hero-band">
     <h1>Account-Brief Generator</h1>
     <p class="hero-sub">A system that turns one dashboard click into a grounded, pre-meeting brief and next-best-action for the account owner — on demand, not a chat window.</p>
-  </div>
-
-  <div class="connect-banner">
-    <span class="connect-icon">↳</span>
-    <div><b>How this connects to Part 1's dashboard:</b> the "Generate Brief" button on any account is this system's front door — it fires on exactly the account you're looking at, using the same <code class="inline">Momentum Signal</code> field the dashboard already shows as "why now." Same query, same source of truth, one click apart. Part 2 is this system's <code class="inline">build_prompt()</code> function, opened up and run live for whichever account the panel picks.</div>
   </div>
 
   <section class="block">
