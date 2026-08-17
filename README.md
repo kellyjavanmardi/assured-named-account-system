@@ -105,6 +105,7 @@ Only real accounts from the dataset are accepted — `getAccount()` throws on an
 - **Retrieval** is a static JSON snapshot standing in for three nightly-synced warehouse tables (6sense, Clay, influ2, HockeyStack) — same shape, no live warehouse connection assumed.
 - **Trigger** is the dashboard's "Generate Brief" button, one account at a time — not a batch/cron job. This part *is* wired to live infra (see **Live deploy**); logging, alerting, and the golden-set eval are designed in the architecture doc, not built.
 - **Model choice**: `claude-opus-5`, with extended thinking explicitly disabled (`thinking: {"type": "disabled"}`) — this is a bounded structured-generation task, not open-ended reasoning, and thinking otherwise shares the token budget with the JSON output.
+- **Opus vs. Sonnet**: chosen for quality over cost — this task is judgment-heavy (risk vs. opportunity, a tailored next-best-action, several guardrails held at once), and call volume here is trivial. At production scale (30 accounts, refreshed weekly or more) Sonnet 5 is likely sufficient and meaningfully cheaper; a more mature version of this system would probably route most accounts through Sonnet and reserve Opus for a high-value tier or an eval-setting phase.
 - **"Recent" signal** = 45-day lookback window.
 - **"Top contacts"** = ranked by seniority (C-Suite → Director) then by engagement, capped at 3.
 
