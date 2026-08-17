@@ -136,7 +136,11 @@ const BRIEF_SCHEMA = {
       },
       description: "Only signals that were actually provided in the input — do not invent one.",
     },
-    risk_or_opportunity: { type: "string" },
+    risk_or_opportunity: {
+      type: "string",
+      description:
+        "Name whichever the data actually supports — a real risk, a real opportunity, or both if the account genuinely has each. Don't force a risk where there isn't one, and don't skip a real risk just because there's also good news.",
+    },
     next_best_action: {
       type: "object",
       properties: {
