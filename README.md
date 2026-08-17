@@ -16,12 +16,11 @@
 | `dashboard.html` | The weekly dashboard — self-contained HTML/CSS/JS, real dataset embedded inline |
 | `agent-architecture.html` | The agent's system-architecture doc, same design system as the dashboard |
 | `assured-system.html` | Both of the above combined into one tabbed page — canonical source |
-| `index.html` | Same content as `assured-system.html`, duplicated at the root so Vercel serves it at `/` with no rewrite needed |
-| `api/agent_account_brief.py` | The agent itself — real, tested Python, not pseudocode. Lives inside `api/` so the deployed function *is* this exact file, not a copy |
-| `api/data/assured_data.json` | The provided dataset, read by both this file and (via the embedded JSON) the dashboard |
-| `api/generate_brief.py` | Vercel serverless function — the real backend behind the dashboard's button |
-| `api/pyproject.toml` | The function's own dependency (`anthropic`) and Python version, scoped to `api/` as its own Vercel Service |
-| `vercel.json` | Declares `api/` as a Vercel Service and routes only `/api/*` to it — everything else serves as plain static files |
+| `index.html` | Same content as `assured-system.html`, duplicated at the root so Vercel serves it at `/` with no config needed |
+| `agent_account_brief.py` | The agent itself — real, tested Python, not pseudocode. The reference implementation; read this to see the pipeline |
+| `data/assured_data.json` | The provided dataset, read by `agent_account_brief.py` and (via the embedded JSON) the dashboard |
+| `api/generate-brief.js` | Vercel serverless function — a faithful Node.js port of the same pipeline, the real backend behind the dashboard's button (see **Live deploy** for why it's a port, not the Python file directly) |
+| `package.json` | The one dependency the function needs (`@anthropic-ai/sdk`) |
 
 Dashboard and agent read from the **same JSON snapshot**, so both surfaces are provably looking at one source of truth.
 
@@ -77,7 +76,7 @@ Run it (needs `ANTHROPIC_API_KEY` set):
 
 ```bash
 pip install anthropic
-python api/agent_account_brief.py
+python agent_account_brief.py
 ```
 
 By default this generates a real brief for Progressive under the `champion_arming` constraint and prints the JSON. Swap the account name or constraint in the `if __name__ == "__main__"` block at the bottom of the file to try others.
@@ -88,22 +87,24 @@ By default this generates a real brief for Progressive under the `champion_armin
 
 The dashboard's button had to actually call Claude live, not fake it — but a static page (like a published claude.ai Artifact) has nowhere safe to hold an API key: anything in client-side JS is visible to anyone who opens dev tools, regardless of hosting. Plain static hosting doesn't fix that either.
 
-The real fix: `api/generate_brief.py` is a Vercel serverless function. It holds `ANTHROPIC_API_KEY` as a server-side environment variable — never sent to the browser — and runs `run_account_brief()` from `api/agent_account_brief.py` for real, for whichever account you click (same file, not a copy — `api/` is fully self-contained as its own Vercel Service). The dashboard's button calls `GET /api/generate_brief?account=<name>`, same-origin, and renders whatever comes back in the agent's real output contract.
+The real fix: `api/generate-brief.js` is a Vercel serverless function. It holds `ANTHROPIC_API_KEY` as a server-side environment variable — never sent to the browser — and runs the same retrieve → quality-gate → assemble-prompt → call-Claude → validate-grounding pipeline as `agent_account_brief.py`, for whichever account you click. The dashboard's button calls `GET /api/generate-brief?account=<name>`, same-origin, and renders whatever comes back in the agent's real output contract.
 
 ```
-Browser click → fetch('/api/generate_brief?account=...')
+Browser click → fetch('/api/generate-brief?account=...')
              → Vercel Function (holds the API key)
-             → run_account_brief() → claude-opus-5
+             → the pipeline → claude-opus-5
              → JSON brief back to the browser
 ```
 
-Deployed with GitHub → Vercel: push to `main`, Vercel builds and deploys both pieces from `vercel.json`'s [Services](https://vercel.com/docs/services) config — `api/` is declared as its own Vercel Service with its own `pyproject.toml`, and only `/api/*` is routed to it; everything else (`index.html`, the screenshots, etc.) is served as plain static files, untouched by the Python runtime. The only manual step is the `ANTHROPIC_API_KEY` environment variable, set in the Vercel project itself (not in this repo — `api/agent_account_brief.py` never hardcodes a key).
+**Why a Node port instead of running `agent_account_brief.py` directly:** that was the first approach, and it's the more natural one — same file, no duplication. But Vercel's Python runtime for this project would not reliably surface Project Settings environment variables to the function at all (confirmed with a runtime check that listed zero environment variable names visible to the process, across two different routing configurations) — a platform-level rough edge, not a bug in the pipeline itself. Node is Vercel's most battle-tested runtime for exactly this shape (static site + one API route reading `process.env`), so `api/generate-brief.js` is a deliberate, faithful, line-by-line port — same retrieval logic, same quality gate, same system prompt and guardrails, same structured-output schema, same grounding check — verified locally against the Python reference before deploying. `agent_account_brief.py` stays the canonical, readable implementation; the port exists solely so the button can hold a key safely.
 
-Only real accounts from the dataset are accepted — `get_account()` raises on anything else — so the account name can't be used to inject arbitrary text into the prompt.
+Deployed with GitHub → Vercel, zero configuration: push to `main` and Vercel auto-detects the static HTML at the root plus the one function in `api/`, installing its single dependency from `package.json`. The only manual step is the `ANTHROPIC_API_KEY` environment variable, set in the Vercel project itself (not in this repo — neither the Python nor the JS pipeline ever hardcodes a key).
+
+Only real accounts from the dataset are accepted — `getAccount()` throws on anything else — so the account name can't be used to inject arbitrary text into the prompt.
 
 ## How this connects to Part 2
 
-`build_prompt()` in `api/agent_account_brief.py` is the exact dynamic-prompt-assembly logic — parameterized on account, contacts, signals, and constraint — that Part 2 opens the hood on live: those become `{{variables}}` in Claude Console, and the constraint becomes the panel's curveball.
+`build_prompt()` in `agent_account_brief.py` is the exact dynamic-prompt-assembly logic — parameterized on account, contacts, signals, and constraint — that Part 2 opens the hood on live: those become `{{variables}}` in Claude Console, and the constraint becomes the panel's curveball.
 
 ## Assumptions
 

@@ -700,7 +700,7 @@
   const CONTACTS = JSON.parse(document.getElementById('data-contacts').textContent);
 
   // No hand-written previews here — the button below calls the live
-  // agent (api/generate_brief.py) and renders whatever it actually
+  // agent (api/generate-brief.js) and renders whatever it actually
   // returns, in its real output contract (see Agent Architecture tab).
 
   function setModalState(state) {
@@ -742,7 +742,7 @@
 
     let res, result;
     try {
-      res = await fetch(`/api/generate_brief?account=${encodeURIComponent(accountName)}`);
+      res = await fetch(`/api/generate-brief?account=${encodeURIComponent(accountName)}`);
       result = await res.json();
     } catch (err) {
       document.getElementById('modal-error').textContent =

@@ -1,0 +1,7 @@
+{
+  "name": "assured-named-account-system",
+  "private": true,
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.68.0"
+  }
+}
