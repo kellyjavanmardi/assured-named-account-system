@@ -140,7 +140,7 @@ def run_quality_gate(account: dict, contacts: list[dict], signals: list[dict]) -
     if caio_risk_flag(account["Account"], contacts, signals):
         flags.append("caio_roster_stale")
 
-    # Verified against the full dataset: 7 of 30 accounts have a "Pilot
+    # Verified against the full dataset: 5 of 30 accounts have a "Pilot
     # Milestone" signal (product-usage telemetry) while their CRM Pilot
     # Status says "None" — the product and CRM systems have drifted apart
     # for these accounts. Citing that signal as-is would tell an AE their

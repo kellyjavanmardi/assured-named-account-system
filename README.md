@@ -52,7 +52,7 @@ Trigger (dashboard button) → Retrieve → Quality Gate → Assemble Prompt →
 - Dormant 60+ days → flagged, brief still generated
 - No recent signals → flagged
 - CAIO hired, contact roster stale → flagged
-- **`pilot_signal_status_mismatch`** — a real data-quality issue found while building this: 7 of 30 accounts carry a "Pilot Milestone" product signal while their CRM `Pilot Status` field still says `None`. Flagged so the brief never implies a pilot that isn't on record.
+- **`pilot_signal_status_mismatch`** — a real data-quality issue found while building this: 5 of 30 accounts carry a "Pilot Milestone" product signal (within the 45-day lookback) while their CRM `Pilot Status` field still says `None`. Flagged so the brief never implies a pilot that isn't on record.
 
 **Guardrails** enforced in the system prompt — every cited signal must literally exist in the input (checked as exact `(date, type, detail)` set membership post-hoc, not fuzzy-matched); no coverage/liability/claims-outcome determinations; no unsupported ROI/timeline/compliance promises; never reference another carrier's data. Fails closed: a signal that doesn't match is never silently delivered — the run returns `grounding_failed` with the offending citation instead.
 
