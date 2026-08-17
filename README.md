@@ -2,10 +2,8 @@
 
 **Part 1** of the AI & Data Marketing Engineer panel exercise: a weekly named-account dashboard and the agentic workflow that powers it, built over the provided synthetic dataset (30 accounts, 42 contacts, 55 signals).
 
-**Live dashboard (real Claude calls):** PENDING_VERCEL_URL
+**Live dashboard (real Claude calls):** https://assured-named-account-system.vercel.app
 *(two tabs — Weekly Dashboard, Agent Architecture. Click "Generate Brief" on any account — it's a real, live call to claude-opus-5, not a canned preview.)*
-
-**Static fallback:** https://claude.ai/code/artifact/afe742d6-4ebf-4bff-9a12-1de8fbd7b017 — same two tabs; "Generate Brief" shows a clear error there instead of a live result, since a claude.ai Artifact page can't hold an API key (see **Live deploy**, below).
 
 ---
 
