@@ -15,12 +15,13 @@
 |---|---|
 | `dashboard.html` | The weekly dashboard — self-contained HTML/CSS/JS, real dataset embedded inline |
 | `agent-architecture.html` | The agent's system-architecture doc, same design system as the dashboard |
-| `assured-system.html` | Both of the above combined into one tabbed page (what's published at the link) |
+| `assured-system.html` | Both of the above combined into one tabbed page — canonical source |
+| `index.html` | Same content as `assured-system.html`, duplicated at the root so Vercel serves it at `/` with no rewrite needed |
 | `agent_account_brief.py` | The agent itself — real, tested Python, not pseudocode |
 | `data/assured_data.json` | The provided dataset, as consumed by both the dashboard and the agent |
 | `api/generate_brief.py` | Vercel serverless function — the real backend behind the dashboard's button |
-| `pyproject.toml` | Declares the one dependency (`anthropic`) and points Vercel at the function's exact entrypoint |
-| `vercel.json` | Routes `/` to `assured-system.html`; the rest is Vercel's zero-config Python + static handling |
+| `api/pyproject.toml` | The function's own dependency (`anthropic`) and Python version, scoped to `api/` as its own Vercel Service |
+| `vercel.json` | Declares `api/` as a Vercel Service and routes only `/api/*` to it — everything else serves as plain static files |
 
 Dashboard and agent read from the **same JSON snapshot**, so both surfaces are provably looking at one source of truth.
 
@@ -96,7 +97,7 @@ Browser click → fetch('/api/generate_brief?account=...')
              → JSON brief back to the browser
 ```
 
-Deployed with GitHub → Vercel: push to `main`, Vercel builds the static files and the Python function together, zero extra config beyond `vercel.json`'s one rewrite (root → `assured-system.html`) and the `ANTHROPIC_API_KEY` environment variable set in the Vercel project (not in this repo — `agent_account_brief.py` never hardcodes a key).
+Deployed with GitHub → Vercel: push to `main`, Vercel builds and deploys both pieces from `vercel.json`'s [Services](https://vercel.com/docs/services) config — `api/` is declared as its own Vercel Service with its own `pyproject.toml`, and only `/api/*` is routed to it; everything else (`index.html`, the screenshots, etc.) is served as plain static files, untouched by the Python runtime. The only manual step is the `ANTHROPIC_API_KEY` environment variable, set in the Vercel project itself (not in this repo — `agent_account_brief.py` never hardcodes a key).
 
 Only real accounts from the dataset are accepted — `get_account()` raises on anything else — so the account name can't be used to inject arbitrary text into the prompt.
 

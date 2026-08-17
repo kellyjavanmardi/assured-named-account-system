@@ -1,0 +1,967 @@
+<title>Assured — Named-Account System</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page-bg: #f6f7f9;
+    --surface: #ffffff;
+    --surface-2: #f1f2f5;
+    --border: rgba(0,0,0,0.10);
+    --ink-primary: #0a0a0a;
+    --ink-secondary: #4e555d;
+    --ink-muted: #9199a6;
+    --grid-line: #e6e7eb;
+    --accent: #7a44ff;
+    --accent-ink: #ffffff;
+    --good: #1ba3ef;
+    --warning: #f7bd15;
+    --warning-text: #9a6b00;
+    --serious: #f48a16;
+    --critical: #de193c;
+    --tint: 14%;
+    --tint-soft: 9%;
+    --card-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    /* Assured brand spectrum — fixed, not themed: pulled straight from the site's hero gradient + CTA gold */
+    --spec-blue: #1ba3ef;
+    --spec-violet: #7a44ff;
+    --spec-magenta: #e438aa;
+    --spec-gold: #f7bd15;
+    --spec-orange: #f48a16;
+    --spec-red: #de193c;
+    --grad-1: #1ba3ef;
+    --grad-2: #7a44ff;
+    --grad-3: #f7bd15;
+    --grad-4: #e438aa;
+    --cta-bg: #f7bd15;
+    --cta-ink: #14110a;
+  }
+  /* Committed to light mode on purpose — Assured's brand is white/bright, not a dark app shell. */
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--page-bg);
+    color: var(--ink-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+    margin: 0;
+  }
+  .app { max-width: 1180px; margin: 0 auto; padding: 28px 24px 64px; }
+
+  /* ---------- header ---------- */
+  .nav-strip {
+    display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    padding: 4px 2px 16px; flex-wrap: wrap; border-bottom: 1px solid var(--border); margin-bottom: 18px;
+  }
+  .brand-row { display: flex; align-items: center; gap: 8px; }
+  .logo-mark { width: 20px; height: 17px; flex-shrink: 0; }
+  .wordmark { font-size: 14px; font-weight: 700; color: var(--ink-primary); letter-spacing: -0.01em; }
+  .top-meta { text-align: right; font-size: 12px; color: var(--ink-muted); }
+  .top-meta strong { color: var(--ink-secondary); font-weight: 600; }
+
+  .hero-band {
+    position: relative; overflow: hidden; border-radius: 20px; margin-bottom: 26px;
+    padding: 32px 30px; background: linear-gradient(100deg, var(--grad-1) 0%, var(--grad-2) 32%, var(--grad-3) 66%, var(--grad-4) 100%);
+  }
+  .hero-band::before, .hero-band::after {
+    content: ""; position: absolute; border-radius: 50%; filter: blur(2px); opacity: 0.55; pointer-events: none;
+  }
+  .hero-band::before { width: 140px; height: 140px; background: radial-gradient(circle at 35% 35%, #ffffffbb, #ffffff00 70%); top: -50px; right: 60px; }
+  .hero-band::after { width: 90px; height: 90px; background: radial-gradient(circle at 35% 35%, #ffffff99, #ffffff00 70%); bottom: -30px; right: 200px; }
+  h1 { font-size: 27px; font-weight: 800; margin: 0 0 6px; letter-spacing: -0.01em; text-wrap: balance; color: #ffffff; position: relative; z-index: 1; }
+  .hero-sub { font-size: 13.5px; color: rgba(255,255,255,0.92); margin: 0; position: relative; z-index: 1; font-weight: 500; }
+
+  /* ---------- stat row ---------- */
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 26px; }
+  .stat-tile { background: var(--surface); border: 1px solid var(--border); border-top: 3px solid; border-radius: 14px; padding: 14px 16px; box-shadow: var(--card-shadow); }
+  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); font-weight: 600; margin-bottom: 6px; }
+  .stat-value { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .stat-sub { font-size: 11.5px; color: var(--ink-secondary); margin-top: 3px; }
+
+  /* ---------- color key ---------- */
+  .color-key { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; padding: 10px 14px; margin-bottom: 22px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  .color-key .key-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); font-weight: 700; margin-right: 2px; }
+  .key-item { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-secondary); white-space: nowrap; }
+  .key-item .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+
+  /* ---------- section headers ---------- */
+  section.block { margin-bottom: 30px; }
+  .block-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; gap: 12px; }
+  .block-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-primary); display: flex; align-items: center; gap: 8px; }
+  .block-title .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .block-desc { font-size: 12px; color: var(--ink-muted); }
+
+  /* ---------- act now cards ---------- */
+  .card-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .card-row.two { grid-template-columns: repeat(2, 1fr); }
+  .acard {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--card-shadow);
+    padding: 16px; border-left: 3px solid var(--ink-muted); display: flex; flex-direction: column; gap: 10px;
+  }
+  .acard.urgent { border-left-color: var(--spec-magenta); }
+  .acard.risk { border-left-color: var(--spec-orange); }
+  .acard.expand { border-left-color: var(--spec-gold); }
+  .acard-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .acard-name { font-size: 15.5px; font-weight: 700; letter-spacing: -0.01em; }
+  .acard-sub { font-size: 11.5px; color: var(--ink-muted); margin-top: 2px; }
+  .acard-metrics { display: flex; gap: 14px; flex-wrap: wrap; }
+  .metric { display: flex; flex-direction: column; gap: 2px; }
+  .metric-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted); font-weight: 600; }
+  .metric-value { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .acard-why { font-size: 12.5px; color: var(--ink-secondary); background: var(--surface-2); border-radius: 8px; padding: 9px 11px; }
+  .acard-nba { display: flex; flex-direction: column; gap: 6px; margin-top: auto; padding-top: 10px; border-top: 1px dashed var(--border); }
+  .nba-label { display: inline-flex; align-items: center; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; background: var(--cta-bg); color: var(--cta-ink); padding: 3px 9px; border-radius: 100px; width: fit-content; }
+  .nba-text { font-size: 12px; font-weight: 600; color: var(--ink-primary); }
+
+  /* ---------- badges ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 100px; white-space: nowrap; }
+  .badge.trend-rising { background: color-mix(in srgb, var(--spec-blue) var(--tint), var(--surface)); color: var(--spec-blue); }
+  .badge.trend-flat { background: var(--surface-2); color: var(--ink-secondary); }
+  .badge.trend-cooling { background: color-mix(in srgb, var(--spec-red) var(--tint), var(--surface)); color: var(--spec-red); }
+  .badge.pilot-none { background: var(--surface-2); color: var(--ink-muted); }
+  .badge.pilot-fnol { background: color-mix(in srgb, var(--spec-violet) var(--tint), var(--surface)); color: var(--spec-violet); }
+  .badge.pilot-prod { background: color-mix(in srgb, var(--spec-gold) var(--tint), var(--surface)); color: var(--warning-text); }
+  .badge.deal-none { background: var(--surface-2); color: var(--ink-muted); }
+  .badge.deal-discovery { background: color-mix(in srgb, var(--spec-blue) var(--tint-soft), var(--surface)); color: var(--ink-secondary); }
+  .badge.deal-pilot { background: color-mix(in srgb, var(--spec-violet) var(--tint), var(--surface)); color: var(--spec-violet); }
+  .badge.deal-expansion { background: color-mix(in srgb, var(--spec-gold) var(--tint), var(--surface)); color: var(--warning-text); }
+  .badge.deal-lost { background: color-mix(in srgb, var(--critical) var(--tint), var(--surface)); color: var(--critical); }
+  .badge.reason-meeting { background: color-mix(in srgb, var(--spec-magenta) var(--tint), var(--surface)); color: var(--spec-magenta); }
+  .badge.reason-caio { background: color-mix(in srgb, var(--spec-orange) var(--tint), var(--surface)); color: var(--spec-orange); }
+
+  /* ---------- pilots table (compact) ---------- */
+  .mini-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: var(--card-shadow); }
+  .mini-table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted); font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--grid-line); }
+  .mini-table td { padding: 9px 12px; border-bottom: 1px solid var(--grid-line); font-size: 12.5px; vertical-align: middle; }
+  .mini-table tr:last-child td { border-bottom: none; }
+  .mini-table tr:hover td { background: var(--surface-2); }
+  .acct-name { font-weight: 600; }
+  .acct-owner { color: var(--ink-muted); font-size: 11px; }
+
+  /* ---------- meter ---------- */
+  .meter-wrap { display: flex; align-items: center; gap: 7px; }
+  .meter-track { width: 56px; height: 5px; border-radius: 3px; background: var(--grid-line); overflow: hidden; flex-shrink: 0; }
+  .meter-fill { height: 100%; background: linear-gradient(90deg, var(--grad-1), var(--grad-2)); border-radius: 3px; }
+  .meter-num { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; width: 20px; text-align: right; }
+
+  /* ---------- full grid ---------- */
+  .filters { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+  .filters select, .filters input {
+    font: inherit; font-size: 12.5px; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--ink-primary);
+  }
+  .filters input { flex: 1; min-width: 160px; }
+  .filters .count { font-size: 12px; color: var(--ink-muted); margin-left: auto; }
+
+  .grid-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); box-shadow: var(--card-shadow); }
+  table.grid { width: 100%; border-collapse: collapse; min-width: 880px; }
+  table.grid th { position: sticky; top: 0; background: var(--surface); text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted); font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--grid-line); cursor: pointer; user-select: none; white-space: nowrap; }
+  table.grid th:hover { color: var(--ink-primary); }
+  table.grid th .arrow { opacity: 0.4; font-size: 9px; margin-left: 3px; }
+  table.grid td { padding: 8px 12px; border-bottom: 1px solid var(--grid-line); font-size: 12.5px; white-space: nowrap; }
+  table.grid tr:last-child td { border-bottom: none; }
+  table.grid tr:hover td { background: var(--surface-2); }
+  .tier-chip { font-size: 10.5px; font-weight: 700; color: var(--ink-muted); }
+  .days-good { color: var(--good); font-weight: 600; }
+  .days-warn { color: var(--warning-text); font-weight: 600; }
+  .days-bad { color: var(--critical); font-weight: 600; }
+
+  /* ---------- footer ---------- */
+  footer.connect {
+    margin-top: 8px; padding: 16px 18px; border-radius: 16px; background: var(--surface-2);
+    border: 1px dashed var(--border); font-size: 12.5px; color: var(--ink-secondary); display: flex; gap: 12px; align-items: flex-start;
+  }
+  footer.connect b { color: var(--ink-primary); }
+  .connect-icon { font-size: 16px; flex-shrink: 0; }
+
+  @media (max-width: 900px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .card-row, .card-row.two { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- generate-brief button + modal ---------- */
+  .brief-btn {
+    margin-top: 10px; font: inherit; font-size: 11.5px; font-weight: 700; letter-spacing: 0.02em;
+    background: var(--surface); color: var(--spec-violet); border: 1px solid var(--spec-violet);
+    border-radius: 100px; padding: 7px 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    width: fit-content; transition: background 0.12s, color 0.12s;
+  }
+  .brief-btn:hover { background: var(--spec-violet); color: #ffffff; }
+  .brief-btn.compact { margin-top: 0; padding: 4px 10px; font-size: 11px; }
+  .brief-btn::before { content: "✦"; font-size: 11px; }
+
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0; background: rgba(10,10,15,0.55); z-index: 100;
+    align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal-card {
+    background: var(--surface); border-radius: 20px; max-width: 620px; width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35); overflow: hidden; margin-bottom: 40px;
+  }
+  .modal-head {
+    padding: 18px 22px; background: linear-gradient(100deg, var(--grad-1) 0%, var(--grad-2) 45%, var(--grad-3) 85%, var(--grad-4) 115%);
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+  }
+  .modal-head-left { display: flex; flex-direction: column; gap: 5px; }
+  .modal-account { font-size: 17px; font-weight: 800; color: #ffffff; }
+  .modal-preview-badge {
+    display: inline-flex; align-items: center; gap: 5px; width: fit-content; font-size: 10px; font-weight: 800;
+    letter-spacing: 0.05em; text-transform: uppercase; background: rgba(255,255,255,0.22); color: #ffffff;
+    padding: 3px 9px; border-radius: 100px;
+  }
+  .modal-preview-badge.live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #ffffff; animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .modal-loading { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 34px 10px; font-size: 12.5px; color: var(--ink-secondary); text-align: center; line-height: 1.5; }
+  .spinner { width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--border); border-top-color: var(--spec-violet); animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .modal-error { font-size: 13px; color: var(--critical); background: color-mix(in srgb, var(--critical) var(--tint), var(--surface)); border-radius: 12px; padding: 16px 18px; line-height: 1.5; }
+  .modal-close {
+    background: rgba(255,255,255,0.2); border: none; color: #fff; width: 26px; height: 26px; border-radius: 50%;
+    font-size: 15px; cursor: pointer; flex-shrink: 0; line-height: 1;
+  }
+  .modal-close:hover { background: rgba(255,255,255,0.35); }
+  .modal-body { padding: 20px 22px 22px; display: flex; flex-direction: column; gap: 16px; }
+  .modal-section-label { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted); margin-bottom: 6px; }
+  .modal-summary { font-size: 13.5px; color: var(--ink-primary); line-height: 1.5; }
+  .modal-signals { display: flex; flex-direction: column; gap: 7px; }
+  .modal-signal { font-size: 12px; color: var(--ink-secondary); display: flex; gap: 7px; }
+  .modal-signal b { color: var(--ink-primary); font-weight: 600; }
+  .modal-empty { font-size: 12px; color: var(--ink-muted); font-style: italic; }
+  .modal-risk { font-size: 13px; color: var(--ink-secondary); background: var(--surface-2); border-radius: 10px; padding: 10px 13px; line-height: 1.5; }
+  .modal-nba { border: 1px solid var(--border); border-left: 3px solid var(--cta-bg); border-radius: 12px; padding: 13px 15px; }
+  .modal-nba-action { font-size: 13.5px; font-weight: 700; color: var(--ink-primary); margin-bottom: 5px; }
+  .modal-nba-rationale { font-size: 12px; color: var(--ink-secondary); line-height: 1.5; }
+  .modal-footrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .confidence-chip { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 3px 10px; border-radius: 100px; }
+  .confidence-chip.high { background: color-mix(in srgb, var(--good) var(--tint), var(--surface)); color: var(--good); }
+  .confidence-chip.medium { background: color-mix(in srgb, var(--warning) var(--tint), var(--surface)); color: var(--warning-text); }
+  .confidence-chip.low { background: color-mix(in srgb, var(--critical) var(--tint), var(--surface)); color: var(--critical); }
+  .modal-gaps { font-size: 11.5px; color: var(--serious); background: color-mix(in srgb, var(--serious) var(--tint), var(--surface)); border-radius: 10px; padding: 9px 12px; line-height: 1.5; }
+  .modal-note {
+    font-size: 11px; color: var(--ink-muted); border-top: 1px dashed var(--border); padding-top: 12px; line-height: 1.5;
+  }
+
+
+  :root {
+    color-scheme: light;
+    --page-bg: #f6f7f9;
+    --surface: #ffffff;
+    --surface-2: #f1f2f5;
+    --border: rgba(0,0,0,0.10);
+    --ink-primary: #0a0a0a;
+    --ink-secondary: #4e555d;
+    --ink-muted: #9199a6;
+    --grid-line: #e6e7eb;
+    --accent: #7a44ff;
+    --good: #1ba3ef;
+    --warning: #f7bd15;
+    --warning-text: #9a6b00;
+    --serious: #f48a16;
+    --critical: #de193c;
+    --tint: 14%;
+    --card-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    --spec-blue: #1ba3ef;
+    --spec-violet: #7a44ff;
+    --spec-magenta: #e438aa;
+    --spec-gold: #f7bd15;
+    --spec-orange: #f48a16;
+    --spec-red: #de193c;
+    --grad-1: #1ba3ef;
+    --grad-2: #7a44ff;
+    --grad-3: #f7bd15;
+    --grad-4: #e438aa;
+    --cta-bg: #f7bd15;
+    --cta-ink: #14110a;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--page-bg);
+    color: var(--ink-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .app { max-width: 1080px; margin: 0 auto; padding: 28px 24px 72px; }
+
+  .nav-strip {
+    display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    padding: 4px 2px 16px; flex-wrap: wrap; border-bottom: 1px solid var(--border); margin-bottom: 18px;
+  }
+  .brand-row { display: flex; align-items: center; gap: 8px; }
+  .logo-mark { width: 20px; height: 17px; flex-shrink: 0; }
+  .wordmark { font-size: 14px; font-weight: 700; color: var(--ink-primary); letter-spacing: -0.01em; }
+  .top-meta { text-align: right; font-size: 12px; color: var(--ink-muted); }
+  .top-meta strong { color: var(--ink-secondary); font-weight: 600; }
+
+  .hero-band {
+    position: relative; overflow: hidden; border-radius: 20px; margin-bottom: 26px;
+    padding: 30px 30px; background: linear-gradient(100deg, var(--grad-1) 0%, var(--grad-2) 32%, var(--grad-3) 66%, var(--grad-4) 100%);
+  }
+  .hero-band::before, .hero-band::after {
+    content: ""; position: absolute; border-radius: 50%; filter: blur(2px); opacity: 0.55; pointer-events: none;
+  }
+  .hero-band::before { width: 140px; height: 140px; background: radial-gradient(circle at 35% 35%, #ffffffbb, #ffffff00 70%); top: -50px; right: 60px; }
+  .hero-band::after { width: 90px; height: 90px; background: radial-gradient(circle at 35% 35%, #ffffff99, #ffffff00 70%); bottom: -30px; right: 200px; }
+  h1 { font-size: 25px; font-weight: 800; margin: 0 0 6px; letter-spacing: -0.01em; text-wrap: balance; color: #ffffff; position: relative; z-index: 1; }
+  .hero-sub { font-size: 13.5px; color: rgba(255,255,255,0.92); margin: 0; position: relative; z-index: 1; font-weight: 500; max-width: 640px; }
+
+  section.block { margin-bottom: 30px; }
+  .block-head { margin-bottom: 12px; }
+  .block-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-primary); display: flex; align-items: center; gap: 8px; }
+  .block-title .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .block-desc { font-size: 12.5px; color: var(--ink-muted); margin-top: 3px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--card-shadow); padding: 18px 20px; }
+
+  /* connect banner */
+  .connect-banner {
+    display: flex; gap: 14px; align-items: flex-start; padding: 16px 18px; border-radius: 16px;
+    background: var(--surface-2); border: 1px dashed var(--border); font-size: 13px; color: var(--ink-secondary); margin-bottom: 30px;
+  }
+  .connect-banner b { color: var(--ink-primary); }
+  .connect-icon { font-size: 17px; flex-shrink: 0; }
+
+  /* pipeline */
+  .pipeline { display: flex; gap: 8px; flex-wrap: wrap; align-items: stretch; }
+  .pipe-step {
+    flex: 1 1 150px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 13px 14px; box-shadow: var(--card-shadow); position: relative; border-top: 3px solid var(--accent);
+  }
+  .pipe-step .num { font-size: 10px; font-weight: 800; color: var(--ink-muted); letter-spacing: 0.05em; }
+  .pipe-step .title { font-size: 13px; font-weight: 700; margin: 3px 0 4px; }
+  .pipe-step .desc { font-size: 11.5px; color: var(--ink-secondary); line-height: 1.4; }
+  .pipe-arrow { display: flex; align-items: center; color: var(--ink-muted); font-size: 16px; padding: 0 2px; flex-shrink: 0; }
+  @media (max-width: 900px) { .pipe-arrow { display: none; } }
+
+  /* two col */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+  .io-card h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 10px; color: var(--ink-muted); font-weight: 700; }
+  .io-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+  .io-list li { font-size: 12.5px; color: var(--ink-secondary); padding-left: 14px; position: relative; }
+  .io-list li::before { content: "—"; position: absolute; left: 0; color: var(--ink-muted); }
+  .io-list b { color: var(--ink-primary); }
+
+  /* schema */
+  pre.schema {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px;
+    font-family: var(--mono); font-size: 12px; line-height: 1.6; overflow-x: auto; box-shadow: var(--card-shadow); margin: 0;
+  }
+  .k { color: var(--spec-violet); }
+  .s { color: var(--spec-blue); }
+  .c { color: var(--ink-muted); font-style: italic; }
+
+  /* status chips row for data quality */
+  .dq-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .dq-card { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--serious); border-radius: 14px; padding: 14px 16px; box-shadow: var(--card-shadow); }
+  .dq-card .trigger { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--serious); margin-bottom: 6px; }
+  .dq-card .behavior { font-size: 12.5px; color: var(--ink-secondary); line-height: 1.5; }
+
+  .future-card { background: var(--surface); border: 1px dashed var(--border); border-radius: 14px; padding: 14px 16px; margin-top: 12px; }
+  .future-card .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--spec-violet); margin-bottom: 6px; }
+  .future-card .body { font-size: 12.5px; color: var(--ink-secondary); line-height: 1.5; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .stat-tile { background: var(--surface); border: 1px solid var(--border); border-top: 3px solid; border-radius: 14px; padding: 13px 15px; box-shadow: var(--card-shadow); }
+  .stat-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted); font-weight: 700; margin-bottom: 5px; }
+  .stat-value { font-size: 14px; font-weight: 700; }
+  .stat-sub { font-size: 11px; color: var(--ink-secondary); margin-top: 2px; }
+
+  code.inline { font-family: var(--mono); font-size: 11.5px; background: var(--surface-2); padding: 1px 6px; border-radius: 5px; color: var(--spec-violet); }
+
+  footer.foot { margin-top: 8px; text-align: center; font-size: 11.5px; color: var(--ink-muted); padding-top: 20px; border-top: 1px solid var(--border); }
+
+
+  /* ---------- tab switcher ---------- */
+  .tab-switch { display: flex; gap: 6px; }
+  .tab-btn { font: inherit; font-size: 12.5px; font-weight: 600; padding: 7px 15px; border-radius: 100px; border: 1px solid var(--border); background: var(--surface); color: var(--ink-secondary); cursor: pointer; }
+  .tab-btn:hover { color: var(--ink-primary); }
+  .tab-btn.active { background: var(--spec-violet); color: #ffffff; border-color: var(--spec-violet); }
+  .page { display: none; }
+  .page.active { display: block; }
+</style>
+
+<div class="app">
+  <div class="nav-strip">
+    <div class="brand-row">
+      <svg class="logo-mark" viewBox="0 0 48 40" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="assuredGrad" x1="0" y1="40" x2="48" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#1ba3ef"/>
+            <stop offset="50%" stop-color="#7a44ff"/>
+            <stop offset="100%" stop-color="#e438aa"/>
+          </linearGradient>
+        </defs>
+        <polygon points="6,40 16,14 26,40" fill="url(#assuredGrad)" opacity="0.55"/>
+        <polygon points="16,40 27,8 38,40" fill="url(#assuredGrad)" opacity="0.8"/>
+        <polygon points="26,40 38,4 48,40" fill="url(#assuredGrad)"/>
+      </svg>
+      <span class="wordmark">Assured · Named-Account Marketing</span>
+    </div>
+    <div class="tab-switch">
+      <button class="tab-btn active" data-tab="dashboard" onclick="showTab('dashboard')">Weekly Dashboard</button>
+      <button class="tab-btn" data-tab="agent" onclick="showTab('agent')">Agent Architecture</button>
+    </div>
+  </div>
+
+  <div id="page-dashboard" class="page active">
+<div class="hero-band">
+    <h1>Weekly Named-Account Dashboard</h1>
+    <p class="hero-sub">30 named P&amp;C carriers · refreshed weekly, Sun 6pm ET</p>
+  </div>
+
+  <section class="stats" id="stats"></section>
+
+  <div class="color-key">
+    <span class="key-label">Color key</span>
+    <span class="key-item"><span class="dot" style="background:var(--spec-magenta)"></span>Act now — no meeting booked</span>
+    <span class="key-item"><span class="dot" style="background:var(--spec-orange)"></span>CAIO risk — build-vs-buy in play</span>
+    <span class="key-item"><span class="dot" style="background:var(--spec-violet)"></span>Pilot in flight</span>
+    <span class="key-item"><span class="dot" style="background:var(--spec-gold)"></span>In production / expansion</span>
+    <span class="key-item"><span class="dot" style="background:var(--spec-blue)"></span>Rising momentum</span>
+    <span class="key-item"><span class="dot" style="background:var(--spec-red)"></span>Cooling / closed-lost</span>
+  </div>
+
+  <section class="block">
+    <div class="block-head">
+      <div class="block-title"><span class="dot" style="background:var(--spec-magenta)"></span>Act Now This Week</div>
+      <div class="block-desc">High intent, unbooked, or at objection risk — needs an owner move in the next 5 business days</div>
+    </div>
+    <div class="card-row" id="act-now"></div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <div class="block-title"><span class="dot" style="background:var(--spec-gold)"></span>Protect &amp; Expand</div>
+      <div class="block-desc">In production, revenue live — the accounts that fund the motion</div>
+    </div>
+    <div class="card-row two" id="protect-expand"></div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <div class="block-title"><span class="dot" style="background:var(--spec-violet)"></span>Pilots in Flight</div>
+      <div class="block-desc">FNOL pilots mid-flight — the population that converts to Protect &amp; Expand next</div>
+    </div>
+    <table class="mini-table">
+      <thead><tr><th>Account</th><th>Stage</th><th>Intent</th><th>Days Since Touch</th><th>Pipeline</th><th>Owner</th><th></th></tr></thead>
+      <tbody id="pilots-body"></tbody>
+    </table>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <div class="block-title">All Named Accounts (30)</div>
+      <div class="block-desc">Full list — filter or sort to browse beyond this week's headline</div>
+    </div>
+    <div class="filters">
+      <input type="text" id="search" placeholder="Search account or owner…">
+      <select id="f-tier"><option value="">All tiers</option><option value="1">Tier 1</option><option value="2">Tier 2</option><option value="3">Tier 3</option></select>
+      <select id="f-deal"><option value="">All deal stages</option></select>
+      <select id="f-pilot"><option value="">All pilot status</option></select>
+      <span class="count" id="row-count"></span>
+    </div>
+    <div class="grid-table-wrap">
+      <table class="grid" id="grid-table">
+        <thead>
+          <tr>
+            <th data-key="Account">Account<span class="arrow"></span></th>
+            <th data-key="Tier">Tier<span class="arrow"></span></th>
+            <th data-key="Intent (0-100)">Intent<span class="arrow"></span></th>
+            <th data-key="Buying Stage">Buying Stage<span class="arrow"></span></th>
+            <th data-key="Deal Stage">Deal Stage<span class="arrow"></span></th>
+            <th data-key="Pilot Status">Pilot<span class="arrow"></span></th>
+            <th data-key="Open Pipeline ($)">Pipeline<span class="arrow"></span></th>
+            <th data-key="Days Since Touch">Days Since Touch<span class="arrow"></span></th>
+            <th data-key="Account Owner">Owner<span class="arrow"></span></th>
+          </tr>
+        </thead>
+        <tbody id="grid-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="connect">
+    <span class="connect-icon">↳</span>
+    <div><b>How this becomes action:</b> every "why now" line and every flag above is pulled straight from the Signals feed and account row — the same fields the account-brief agent reads. Click <b>Generate Brief</b> on any Act Now or Protect &amp; Expand card to see the exact output the agent produces from this data.</div>
+  </footer>
+
+  </div>
+
+  <div id="page-agent" class="page">
+<div class="hero-band">
+    <h1>Account-Brief Generator</h1>
+    <p class="hero-sub">A system that turns one dashboard click into a grounded, pre-meeting brief and next-best-action for the account owner — on demand, not a chat window.</p>
+  </div>
+
+  <div class="connect-banner">
+    <span class="connect-icon">↳</span>
+    <div><b>How this connects to Part 1's dashboard:</b> the "Generate Brief" button on any account is this system's front door — it fires on exactly the account you're looking at, using the same <code class="inline">Momentum Signal</code> field the dashboard already shows as "why now." Same query, same source of truth, one click apart. Part 2 is this system's <code class="inline">build_prompt()</code> function, opened up and run live for whichever account the panel picks.</div>
+  </div>
+
+  <section class="block">
+    <div class="block-head">
+      <div class="block-title"><span class="dot" style="background:var(--spec-violet)"></span>Focus</div>
+      <div class="block-desc">One agent, adaptive next-best-action — not three separate agents</div>
+    </div>
+    <div class="card" style="font-size:13px; color:var(--ink-secondary); line-height:1.6;">
+      Pulls an account's row, its top contacts, and its recent signals, and drafts a tight pre-meeting brief with a <b style="color:var(--ink-primary)">recommended next-best-action</b>. The action itself adapts to context: book-a-meeting for a high-intent no-touch account, a build-vs-buy objection play when a CAIO risk is flagged, a save play if a pilot is asked to be treated as cooling. One prompt template, one output contract — not three separate agents to maintain.
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <div class="block-title"><span class="dot" style="background:var(--spec-blue)"></span>Orchestration Pipeline</div>
+      <div class="block-desc">Trigger → retrieve → gate → assemble → call → validate → deliver → log</div>
+    </div>
+    <div class="pipeline">
+      <div class="pipe-step"><div class="num">00</div><div class="title">Trigger</div><div class="desc">Account owner clicks "Generate Brief" on the dashboard — one account, on demand</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step"><div class="num">01</div><div class="title">Retrieve</div><div class="desc">Join account + contacts + signals from the warehouse (mirrors the dashboard's own query)</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step"><div class="num">02</div><div class="title">Quality Gate</div><div class="desc">Check for thin data <i>before</i> spending a model call — route to fallback if unusable</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step"><div class="num">03</div><div class="title">Assemble Prompt</div><div class="desc"><code class="inline">build_prompt()</code> — the Part 2 function, parameterized on account/contacts/signals/constraint</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step"><div class="num">04</div><div class="title">Call Claude</div><div class="desc">claude-opus-5, output schema enforced via structured outputs — not a prompt instruction</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step"><div class="num">05</div><div class="title">Validate Grounding</div><div class="desc">Every cited signal must trace to one actually in the input, or it's rejected</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step"><div class="num">06</div><div class="title">Deliver + Log</div><div class="desc">Rendered straight back to the account owner in the dashboard; full run logged to an eval table</div></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <div class="block-title"><span class="dot" style="background:var(--spec-magenta)"></span>Inputs &amp; Output Contract</div>
+    </div>
+    <div class="two-col">
+      <div class="card io-card">
+        <h3>Inputs (per account)</h3>
+        <ul class="io-list">
+          <li><b>Account row</b> — tier, intent + trend, buying/deal stage, pilot status, pipeline, momentum note (warehouse table, 6sense-fed)</li>
+          <li><b>Top contacts</b> — up to 3, ranked by seniority then engagement (Clay-enriched)</li>
+          <li><b>Recent signals</b> — last 45 days, ranked by strength + recency (influ2 / HockeyStack / 6sense / Clay)</li>
+          <li><b>Quality flags</b> — computed by the gate step, e.g. <code class="inline">caio_roster_stale</code>, <code class="inline">dormant_60d</code></li>
+          <li><b>Constraint</b> <i>(optional)</i> — <code class="inline">champion_arming</code> / <code class="inline">save_play</code> / <code class="inline">expansion_push</code>, the live-curveball lever</li>
+        </ul>
+      </div>
+      <div class="card io-card">
+        <h3>Output contract</h3>
+        <pre class="schema">{
+  <span class="k">"account"</span>: <span class="s">string</span>,
+  <span class="k">"situation_summary"</span>: <span class="s">string</span>,
+  <span class="k">"key_signals"</span>: [
+    { <span class="k">"date"</span>, <span class="k">"type"</span>, <span class="k">"detail"</span> }
+  ], <span class="c">// must trace to input</span>
+  <span class="k">"risk_or_opportunity"</span>: <span class="s">string</span>,
+  <span class="k">"next_best_action"</span>: {
+    <span class="k">"action"</span>, <span class="k">"rationale"</span>
+  },
+  <span class="k">"confidence"</span>: <span class="s">"high"|"medium"|"low"</span>,
+  <span class="k">"data_gaps"</span>: [<span class="s">string</span>]
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <div class="block-title"><span class="dot" style="background:var(--spec-red)"></span>Guardrails</div>
+      <div class="block-desc">Two layers — a system-prompt instruction the model follows, and code that checks it after the fact</div>
+    </div>
+    <div class="dq-grid">
+      <div class="dq-card" style="border-left-color:var(--spec-red)">
+        <div class="trigger" style="color:var(--spec-red)">Not grounded</div>
+        <div class="behavior">System prompt: never invent a signal, date, contact, or number. Enforced twice — once as an instruction, once by <code class="inline">validate_grounding()</code> checking every cited signal against the real input after generation.</div>
+      </div>
+      <div class="dq-card" style="border-left-color:var(--spec-red)">
+        <div class="trigger" style="color:var(--spec-red)">Carrier compliance</div>
+        <div class="behavior">No coverage, liability, or claims-outcome determinations. No promised ROI, timeline, or regulatory outcome not present in the input — recommend, don't commit.</div>
+      </div>
+      <div class="dq-card" style="border-left-color:var(--spec-red)">
+        <div class="trigger" style="color:var(--spec-red)">Cross-account leakage</div>
+        <div class="behavior">Each brief is scoped to one carrier only — never reference another carrier's data, deals, or contacts when writing about this account.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <div class="block-title"><span class="dot" style="background:var(--serious)"></span>Handling Bad or Missing Data</div>
+      <div class="block-desc">The gate runs before the model call — Claude never has to improvise on thin data</div>
+    </div>
+    <div class="dq-grid">
+      <div class="dq-card">
+        <div class="trigger">No contacts + no signals</div>
+        <div class="behavior">Skip the Claude call entirely. Route straight to a human-review flag — never let the model guess its way to a plausible-sounding brief with nothing to ground it.</div>
+      </div>
+      <div class="dq-card">
+        <div class="trigger">Days since touch &gt; 60</div>
+        <div class="behavior">Tagged <code class="inline">dormant_Nd</code> and passed explicitly into the prompt, so the brief says "going cold" instead of manufacturing urgency that isn't there.</div>
+      </div>
+      <div class="dq-card">
+        <div class="trigger">CAIO signal predates contact record</div>
+        <div class="behavior">Same staleness check as the dashboard — flagged as <code class="inline">caio_roster_stale</code> and surfaced in <code class="inline">data_gaps</code> rather than assumed resolved.</div>
+      </div>
+      <div class="dq-card">
+        <div class="trigger">Product signal, no CRM pilot</div>
+        <div class="behavior">Verified in the raw data: 7 of 30 accounts carry a "Pilot Milestone" signal while their CRM Pilot Status says None — product usage and CRM state have drifted apart. Flagged as <code class="inline">pilot_signal_status_mismatch</code> so the brief doesn't imply a pilot that isn't on record.</div>
+      </div>
+      <div class="dq-card">
+        <div class="trigger">Model output fails grounding</div>
+        <div class="behavior">One retry with a stricter reminder; a second failure routes to the human queue instead of delivering an ungrounded brief.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <div class="block-title"><span class="dot" style="background:var(--spec-gold)"></span>Trigger &amp; Observability</div>
+      <div class="block-desc">One trigger today, on demand — not a batch job</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-tile" style="border-top-color:var(--spec-magenta)"><div class="stat-label">Trigger</div><div class="stat-value">Dashboard button</div><div class="stat-sub">Account owner clicks Generate Brief; runs synchronously, ready in seconds</div></div>
+      <div class="stat-tile" style="border-top-color:var(--spec-violet)"><div class="stat-label">Golden Set</div><div class="stat-value">5 accounts</div><div class="stat-sub">Hand-graded, scored weekly by Claude-as-judge</div></div>
+      <div class="stat-tile" style="border-top-color:var(--spec-gold)"><div class="stat-label">Alerting</div><div class="stat-value">&gt;5% fail rate</div><div class="stat-sub">Grounding-check failures page the on-call owner</div></div>
+      <div class="stat-tile" style="border-top-color:var(--spec-orange)"><div class="stat-label">Every run logs</div><div class="stat-value">input · output</div><div class="stat-sub">+ prompt version, latency, token cost</div></div>
+    </div>
+    <div class="future-card">
+      <div class="label">Where this goes next — not built</div>
+      <div class="body">Ideally this fires itself: the moment a meeting lands on the calendar or a CRM stage flips to "meeting set," the same pipeline runs automatically and the brief is waiting before the account owner asks for it. That needs Claude connected to the team's calendar/CRM to watch for the event — out of scope here, so today the account owner triggers it with one click instead.</div>
+    </div>
+  </section>
+
+  <footer class="foot">Code: <code class="inline">agent_account_brief.py</code> · Part 2 opens <code class="inline">build_prompt()</code> live for the account the panel picks</footer>
+
+  </div>
+</div>
+
+<div class="modal-backdrop" id="brief-modal" onclick="if(event.target===this) closeBrief()">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-head-left">
+        <span class="modal-preview-badge live">✦ Live — calling Claude now</span>
+        <span class="modal-account" id="modal-account"></span>
+      </div>
+      <button class="modal-close" onclick="closeBrief()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-loading" class="modal-loading" style="display:none;">
+        <div class="spinner"></div>
+        <div>Retrieving this account's contacts and signals, running the quality gate, calling claude-opus-5&hellip;</div>
+      </div>
+      <div id="modal-error" class="modal-error" style="display:none;"></div>
+      <div id="modal-content" style="display:none;">
+        <div>
+          <div class="modal-section-label">Situation</div>
+          <div class="modal-summary" id="modal-summary"></div>
+        </div>
+        <div>
+          <div class="modal-section-label">Key Signals</div>
+          <div class="modal-signals" id="modal-signals"></div>
+        </div>
+        <div>
+          <div class="modal-section-label">Risk / Opportunity</div>
+          <div class="modal-risk" id="modal-risk"></div>
+        </div>
+        <div>
+          <div class="modal-section-label">Next Best Action</div>
+          <div class="modal-nba">
+            <div class="modal-nba-action" id="modal-nba-action"></div>
+            <div class="modal-nba-rationale" id="modal-nba-rationale"></div>
+          </div>
+        </div>
+        <div class="modal-footrow">
+          <span class="modal-section-label" style="margin:0;">Confidence</span>
+          <span class="confidence-chip" id="modal-confidence"></span>
+        </div>
+        <div id="modal-gaps-wrap" style="display:none;">
+          <div class="modal-section-label">Data Gaps</div>
+          <div class="modal-gaps" id="modal-gaps"></div>
+        </div>
+      </div>
+      <div class="modal-note">*Triggered by this click, on demand, one account at a time — not a batch job. Where this goes next: auto-firing the moment a meeting is booked (CRM update or calendar event), once Claude is connected to watch for that — not built here, so today you trigger it.</div>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="data-accounts">[{"Account":"State Farm","Tier":1.0,"Segment":"Multiline (Auto+Property)","HQ":"IL","Est. DWP ($B)":78.0,"ICP Fit (0-100)":93.0,"Intent (0-100)":84.0,"Intent Trend":"Rising","Buying Stage":"Evaluation","Engaged Contacts":15.0,"Top Persona Engaged":"Chief Claims Officer","Web Visits 30d":244.0,"Content DLs 30d":7.0,"Exec Ad Impr. 30d":1997.0,"Last Touch":"2026-07-26","Days Since Touch":5.0,"Meetings QTD":3.0,"Deal Stage":"Expansion","Open Pipeline ($)":1666905.0,"Pilot Status":"In Production","First-Touch Channel":"Event (ITC)","Account Owner":"Marcus Hill","Momentum Signal":"In production on FNOL across intake; CCO championing triage + subro expansion. RFP expected Q3."},{"Account":"Progressive","Tier":1.0,"Segment":"Personal Auto","HQ":"OH","Est. DWP ($B)":62.0,"ICP Fit (0-100)":80.0,"Intent (0-100)":72.0,"Intent Trend":"Rising","Buying Stage":"Decision","Engaged Contacts":9.0,"Top Persona Engaged":"Chief AI Officer","Web Visits 30d":157.0,"Content DLs 30d":5.0,"Exec Ad Impr. 30d":592.0,"Last Touch":"2026-07-29","Days Since Touch":2.0,"Meetings QTD":4.0,"Deal Stage":"Pilot","Open Pipeline ($)":845140.0,"Pilot Status":"FNOL Pilot","First-Touch Channel":"Exec Ads (influ2)","Account Owner":"Sofia Alvarez","Momentum Signal":"FNOL pilot live 6 wks; strong accuracy read. New CAIO hired from a hyperscaler \u2014 build-vs-buy scrutiny rising."},{"Account":"Allstate","Tier":1.0,"Segment":"Multiline (Auto+Property)","HQ":"IL","Est. DWP ($B)":50.0,"ICP Fit (0-100)":67.0,"Intent (0-100)":63.0,"Intent Trend":"Cooling","Buying Stage":"Consideration","Engaged Contacts":4.0,"Top Persona Engaged":"Chief AI Officer","Web Visits 30d":71.0,"Content DLs 30d":5.0,"Exec Ad Impr. 30d":286.0,"Last Touch":"2026-07-24","Days Since Touch":7.0,"Meetings QTD":2.0,"Deal Stage":"Discovery","Open Pipeline ($)":109874.0,"Pilot Status":"None","First-Touch Channel":"Event (ITC)","Account Owner":"Priya Nair","Momentum Signal":"Claims-transformation program announced; hiring FNOL + ML roles. Warm intro via Travelers reference."},{"Account":"Berkshire / GEICO","Tier":1.0,"Segment":"Personal Auto","HQ":"MD","Est. DWP ($B)":39.0,"ICP Fit (0-100)":83.0,"Intent (0-100)":80.0,"Intent Trend":"Rising","Buying Stage":"Consideration","Engaged Contacts":7.0,"Top Persona Engaged":"Chief AI Officer","Web Visits 30d":206.0,"Content DLs 30d":6.0,"Exec Ad Impr. 30d":342.0,"Last Touch":"2026-07-11","Days Since Touch":20.0,"Meetings QTD":0.0,"Deal Stage":"Discovery","Open Pipeline ($)":25540.0,"Pilot Status":"None","First-Touch Channel":"Event (ITC)","Account Owner":"Dana Reyes","Momentum Signal":"High web + exec-ad engagement, no meeting yet. Cost-focused; lead with LAE reduction."},{"Account":"Liberty Mutual","Tier":1.0,"Segment":"Multiline","HQ":"MA","Est. DWP ($B)":43.0,"ICP Fit (0-100)":89.0,"Intent (0-100)":76.0,"Intent Trend":"Rising","Buying Stage":"Decision","Engaged Contacts":11.0,"Top Persona Engaged":"Chief Innovation Officer","Web Visits 30d":276.0,"Content DLs 30d":7.0,"Exec Ad Impr. 30d":1295.0,"Last Touch":"2026-07-22","Days Since Touch":9.0,"Meetings QTD":3.0,"Deal Stage":"Pilot","Open Pipeline ($)":888218.0,"Pilot Status":"FNOL Pilot","First-Touch Channel":"Webinar","Account Owner":"Marcus Hill","Momentum Signal":"FNOL pilot expanding to property. Coverage-verification interest surfaced on last call."},{"Account":"Travelers","Tier":1.0,"Segment":"Commercial + Personal","HQ":"CT","Est. DWP ($B)":37.0,"ICP Fit (0-100)":90.0,"Intent (0-100)":93.0,"Intent Trend":"Rising","Buying Stage":"Evaluation","Engaged Contacts":12.0,"Top Persona Engaged":"Director, FNOL","Web Visits 30d":261.0,"Content DLs 30d":10.0,"Exec Ad Impr. 30d":1975.0,"Last Touch":"2026-07-25","Days Since Touch":6.0,"Meetings QTD":6.0,"Deal Stage":"Expansion","Open Pipeline ($)":1620320.0,"Pilot Status":"In Production","First-Touch Channel":"Webinar","Account Owner":"Sofia Alvarez","Momentum Signal":"In production; reference account. Evaluating demand-package review for BI. Renewal in 90 days."},{"Account":"USAA","Tier":1.0,"Segment":"Multiline (Auto+Property)","HQ":"TX","Est. DWP ($B)":30.0,"ICP Fit (0-100)":68.0,"Intent (0-100)":48.0,"Intent Trend":"Cooling","Buying Stage":"Consideration","Engaged Contacts":5.0,"Top Persona Engaged":"Chief Innovation Officer","Web Visits 30d":98.0,"Content DLs 30d":4.0,"Exec Ad Impr. 30d":581.0,"Last Touch":"2026-07-26","Days Since Touch":5.0,"Meetings QTD":1.0,"Deal Stage":"Discovery","Open Pipeline ($)":175168.0,"Pilot Status":"None","First-Touch Channel":"Webinar","Account Owner":"Priya Nair","Momentum Signal":"Strong ICP fit; member-experience mandate. Compliance/regulatory scrutiny high \u2014 lead with guardrails."},{"Account":"Nationwide","Tier":1.0,"Segment":"Multiline","HQ":"OH","Est. DWP ($B)":26.0,"ICP Fit (0-100)":89.0,"Intent (0-100)":85.0,"Intent Trend":"Flat","Buying Stage":"Decision","Engaged Contacts":9.0,"Top Persona Engaged":"Chief Claims Officer","Web Visits 30d":157.0,"Content DLs 30d":4.0,"Exec Ad Impr. 30d":776.0,"Last Touch":"2026-07-28","Days Since Touch":3.0,"Meetings QTD":3.0,"Deal Stage":"Pilot","Open Pipeline ($)":1096414.0,"Pilot Status":"FNOL Pilot","First-Touch Channel":"Inbound (Content)","Account Owner":"Priya Nair","Momentum Signal":"FNOL pilot mid-flight; adjuster-capacity pain acute. Champion is VP Claims Ops."},{"Account":"Farmers Insurance","Tier":1.0,"Segment":"Multiline","HQ":"CA","Est. DWP ($B)":24.0,"ICP Fit (0-100)":86.0,"Intent (0-100)":63.0,"Intent Trend":"Cooling","Buying Stage":"Decision","Engaged Contacts":8.0,"Top Persona Engaged":"Chief Innovation Officer","Web Visits 30d":158.0,"Content DLs 30d":6.0,"Exec Ad Impr. 30d":505.0,"Last Touch":"2026-07-14","Days Since Touch":17.0,"Meetings QTD":1.0,"Deal Stage":"Discovery","Open Pipeline ($)":246585.0,"Pilot Status":"None","First-Touch Channel":"Exec Ads (influ2)","Account Owner":"Sofia Alvarez","Momentum Signal":"Re-engaged after ITC; new Head of Claims Transformation. Momentum rising."},{"Account":"American Family","Tier":2.0,"Segment":"Multiline","HQ":"WI","Est. DWP ($B)":14.0,"ICP Fit (0-100)":69.0,"Intent (0-100)":60.0,"Intent Trend":"Rising","Buying Stage":"Consideration","Engaged Contacts":5.0,"Top Persona Engaged":"Chief AI Officer","Web Visits 30d":93.0,"Content DLs 30d":6.0,"Exec Ad Impr. 30d":403.0,"Last Touch":"2026-07-13","Days Since Touch":18.0,"Meetings QTD":2.0,"Deal Stage":"Discovery","Open Pipeline ($)":102485.0,"Pilot Status":"None","First-Touch Channel":"Exec Ads (influ2)","Account Owner":"Tom Becker","Momentum Signal":"Active discovery; qualifying pain and sponsor."},{"Account":"Erie Insurance","Tier":2.0,"Segment":"Multiline","HQ":"PA","Est. DWP ($B)":9.5,"ICP Fit (0-100)":78.0,"Intent (0-100)":62.0,"Intent Trend":"Flat","Buying Stage":"Consideration","Engaged Contacts":6.0,"Top Persona Engaged":"SVP Claims Operations","Web Visits 30d":200.0,"Content DLs 30d":3.0,"Exec Ad Impr. 30d":873.0,"Last Touch":"2026-07-16","Days Since Touch":15.0,"Meetings QTD":2.0,"Deal Stage":"Discovery","Open Pipeline ($)":94049.0,"Pilot Status":"None","First-Touch Channel":"Exec Ads (influ2)","Account Owner":"Dana Reyes","Momentum Signal":"Active discovery; qualifying pain and sponsor."},{"Account":"The Hartford","Tier":2.0,"Segment":"Commercial + WC","HQ":"CT","Est. DWP ($B)":12.0,"ICP Fit (0-100)":82.0,"Intent (0-100)":76.0,"Intent Trend":"Rising","Buying Stage":"Decision","Engaged Contacts":11.0,"Top Persona Engaged":"Head of Claims Transformation","Web Visits 30d":199.0,"Content DLs 30d":4.0,"Exec Ad Impr. 30d":996.0,"Last Touch":"2026-07-25","Days Since Touch":6.0,"Meetings QTD":0.0,"Deal Stage":"Pilot","Open Pipeline ($)":591200.0,"Pilot Status":"FNOL Pilot","First-Touch Channel":"Outbound (Clay)","Account Owner":"Marcus Hill","Momentum Signal":"WC + commercial FNOL pilot. Medical-record summarization is the wedge."},{"Account":"Chubb","Tier":1.0,"Segment":"Commercial + Specialty","HQ":"NJ","Est. DWP ($B)":40.0,"ICP Fit (0-100)":79.0,"Intent (0-100)":62.0,"Intent Trend":"Flat","Buying Stage":"Decision","Engaged Contacts":4.0,"Top Persona Engaged":"VP Claims Technology","Web Visits 30d":191.0,"Content DLs 30d":5.0,"Exec Ad Impr. 30d":820.0,"Last Touch":"2026-07-11","Days Since Touch":20.0,"Meetings QTD":1.0,"Deal Stage":"Discovery","Open Pipeline ($)":119706.0,"Pilot Status":"None","First-Touch Channel":"Referral","Account Owner":"Tom Becker","Momentum Signal":"Specialty complexity; interested in document summarization. Early, technical buyer."},{"Account":"Auto-Owners","Tier":2.0,"Segment":"Multiline","HQ":"MI","Est. DWP ($B)":9.0,"ICP Fit (0-100)":67.0,"Intent (0-100)":24.0,"Intent Trend":"Cooling","Buying Stage":"Consideration","Engaged Contacts":0.0,"Top Persona Engaged":"\u2014","Web Visits 30d":29.0,"Content DLs 30d":0.0,"Exec Ad Impr. 30d":106.0,"Last Touch":"2026-03-21","Days Since Touch":132.0,"Meetings QTD":0.0,"Deal Stage":"None","Open Pipeline ($)":0.0,"Pilot Status":"None","First-Touch Channel":"Exec Ads (influ2)","Account Owner":"Dana Reyes","Momentum Signal":"Cold / early \u2014 no active motion."},{"Account":"CSAA (AAA)","Tier":2.0,"Segment":"Personal Auto","HQ":"CA","Est. DWP ($B)":4.5,"ICP Fit (0-100)":76.0,"Intent (0-100)":64.0,"Intent Trend":"Rising","Buying Stage":"Consideration","Engaged Contacts":3.0,"Top Persona Engaged":"Chief Claims Officer","Web Visits 30d":205.0,"Content DLs 30d":2.0,"Exec Ad Impr. 30d":699.0,"Last Touch":"2026-07-17","Days Since Touch":14.0,"Meetings QTD":1.0,"Deal Stage":"Discovery","Open Pipeline ($)":248761.0,"Pilot Status":"None","First-Touch Channel":"Outbound (Clay)","Account Owner":"Marcus Hill","Momentum Signal":"Active discovery; qualifying pain and sponsor."},{"Account":"Mercury Insurance","Tier":3.0,"Segment":"Personal Auto","HQ":"CA","Est. DWP ($B)":4.8,"ICP Fit (0-100)":74.0,"Intent (0-100)":42.0,"Intent Trend":"Flat","Buying Stage":"Consideration","Engaged Contacts":2.0,"Top Persona Engaged":"Chief AI Officer","Web Visits 30d":82.0,"Content DLs 30d":2.0,"Exec Ad Impr. 30d":242.0,"Last Touch":"2026-06-10","Days Since Touch":51.0,"Meetings QTD":0.0,"Deal Stage":"None","Open Pipeline ($)":0.0,"Pilot Status":"None","First-Touch Channel":"Conference","Account Owner":"Tom Becker","Momentum Signal":"Cold / early \u2014 no active motion."},{"Account":"Kemper","Tier":3.0,"Segment":"Personal Auto","HQ":"IL","Est. DWP ($B)":4.0,"ICP Fit (0-100)":72.0,"Intent (0-100)":35.0,"Intent Trend":"Cooling","Buying Stage":"Awareness","Engaged Contacts":4.0,"Top Persona Engaged":"Chief Innovation Officer","Web Visits 30d":29.0,"Content DLs 30d":0.0,"Exec Ad Impr. 30d":36.0,"Last Touch":"2026-06-18","Days Since Touch":43.0,"Meetings QTD":0.0,"Deal Stage":"Closed Lost","Open Pipeline ($)":0.0,"Pilot Status":"None","First-Touch Channel":"Inbound (Content)","Account Owner":"Priya Nair","Momentum Signal":"Lost to in-house build 2 quarters ago. Cooling \u2014 nurture only."},{"Account":"MetLife (Auto&Home legacy)","Tier":2.0,"Segment":"Personal Auto","HQ":"RI","Est. DWP ($B)":6.0,"ICP Fit (0-100)":70.0,"Intent (0-100)":28.0,"Intent Trend":"Rising","Buying Stage":"Awareness","Engaged Contacts":1.0,"Top Persona Engaged":"Chief Claims Officer","Web Visits 30d":72.0,"Content DLs 30d":2.0,"Exec Ad Impr. 30d":75.0,"Last Touch":"2026-02-22","Days Since Touch":159.0,"Meetings QTD":0.0,"Deal Stage":"None","Open Pipeline ($)":0.0,"Pilot Status":"None","First-Touch Channel":"Conference","Account Owner":"Sofia Alvarez","Momentum Signal":"Cold / early \u2014 no active motion."},{"Account":"Cincinnati Financial","Tier":2.0,"Segment":"Commercial + Personal","HQ":"OH","Est. DWP ($B)":8.5,"ICP Fit (0-100)":75.0,"Intent (0-100)":65.0,"Intent Trend":"Rising","Buying Stage":"Decision","Engaged Contacts":7.0,"Top Persona Engaged":"Chief Innovation Officer","Web Visits 30d":153.0,"Content DLs 30d":2.0,"Exec Ad Impr. 30d":514.0,"Last Touch":"2026-07-11","Days Since Touch":20.0,"Meetings QTD":1.0,"Deal Stage":"Discovery","Open Pipeline ($)":139615.0,"Pilot Status":"None","First-Touch Channel":"Inbound (Content)","Account Owner":"Marcus Hill","Momentum Signal":"Active discovery; qualifying pain and sponsor."},{"Account":"Zurich N.A.","Tier":2.0,"Segment":"Commercial","HQ":"IL","Est. DWP ($B)":17.0,"ICP Fit (0-100)":85.0,"Intent (0-100)":70.0,"Intent Trend":"Rising","Buying Stage":"Consideration","Engaged Contacts":6.0,"Top Persona Engaged":"Chief Claims Officer","Web Visits 30d":118.0,"Content DLs 30d":2.0,"Exec Ad Impr. 30d":680.0,"Last Touch":"2026-07-28","Days Since Touch":3.0,"Meetings QTD":2.0,"Deal Stage":"Discovery","Open Pipeline ($)":93208.0,"Pilot Status":"None","First-Touch Channel":"Conference","Account Owner":"Priya Nair","Momentum Signal":"Active discovery; qualifying pain and sponsor."},{"Account":"AIG","Tier":2.0,"Segment":"Commercial + Specialty","HQ":"NY","Est. DWP ($B)":25.0,"ICP Fit (0-100)":70.0,"Intent (0-100)":34.0,"Intent Trend":"Flat","Buying Stage":"Consideration","Engaged Contacts":3.0,"Top Persona Engaged":"SVP Claims Operations","Web Visits 30d":108.0,"Content DLs 30d":2.0,"Exec Ad Impr. 30d":186.0,"Last Touch":"2026-06-21","Days Since Touch":40.0,"Meetings QTD":0.0,"Deal Stage":"None","Open Pipeline ($)":0.0,"Pilot Status":"None","First-Touch Channel":"Outbound (Clay)","Account Owner":"Marcus Hill","Momentum Signal":"Cold / early \u2014 no active motion."},{"Account":"Sentry Insurance","Tier":3.0,"Segment":"Commercial + WC","HQ":"WI","Est. DWP ($B)":3.5,"ICP Fit (0-100)":70.0,"Intent (0-100)":30.0,"Intent Trend":"Cooling","Buying Stage":"Awareness","Engaged Contacts":3.0,"Top Persona Engaged":"Chief AI Officer","Web Visits 30d":84.0,"Content DLs 30d":0.0,"Exec Ad Impr. 30d":245.0,"Last Touch":"2026-04-14","Days Since Touch":108.0,"Meetings QTD":0.0,"Deal Stage":"None","Open Pipeline ($)":0.0,"Pilot Status":"None","First-Touch Channel":"Conference","Account Owner":"Dana Reyes","Momentum Signal":"Cold / early \u2014 no active motion."},{"Account":"Amica Mutual","Tier":3.0,"Segment":"Multiline","HQ":"RI","Est. DWP ($B)":2.6,"ICP Fit (0-100)":78.0,"Intent (0-100)":70.0,"Intent Trend":"Rising","Buying Stage":"Decision","Engaged Contacts":4.0,"Top Persona Engaged":"Director, FNOL","Web Visits 30d":171.0,"Content DLs 30d":6.0,"Exec Ad Impr. 30d":490.0,"Last Touch":"2026-07-16","Days Since Touch":15.0,"Meetings QTD":1.0,"Deal Stage":"Discovery","Open Pipeline ($)":209931.0,"Pilot Status":"None","First-Touch Channel":"Referral","Account Owner":"Dana Reyes","Momentum Signal":"Active discovery; qualifying pain and sponsor."},{"Account":"Plymouth Rock","Tier":3.0,"Segment":"Personal Auto","HQ":"MA","Est. DWP ($B)":1.6,"ICP Fit (0-100)":78.0,"Intent (0-100)":28.0,"Intent Trend":"Flat","Buying Stage":"Awareness","Engaged Contacts":0.0,"Top Persona Engaged":"\u2014","Web Visits 30d":24.0,"Content DLs 30d":3.0,"Exec Ad Impr. 30d":335.0,"Last Touch":"2026-06-04","Days Since Touch":57.0,"Meetings QTD":0.0,"Deal Stage":"None","Open Pipeline ($)":0.0,"Pilot Status":"None","First-Touch Channel":"Event (ITC)","Account Owner":"Sofia Alvarez","Momentum Signal":"Cold / early \u2014 no active motion."},{"Account":"Root Insurance","Tier":3.0,"Segment":"Personal Auto (Insurtech)","HQ":"OH","Est. DWP ($B)":0.9,"ICP Fit (0-100)":87.0,"Intent (0-100)":81.0,"Intent Trend":"Rising","Buying Stage":"Decision","Engaged Contacts":10.0,"Top Persona Engaged":"VP Claims","Web Visits 30d":280.0,"Content DLs 30d":5.0,"Exec Ad Impr. 30d":521.0,"Last Touch":"2026-07-28","Days Since Touch":3.0,"Meetings QTD":2.0,"Deal Stage":"Pilot","Open Pipeline ($)":1081233.0,"Pilot Status":"FNOL Pilot","First-Touch Channel":"Referral","Account Owner":"Marcus Hill","Momentum Signal":"Insurtech, fast pilot cycle; total-loss estimation review interest."},{"Account":"Lemonade","Tier":3.0,"Segment":"Personal Property (Insurtech)","HQ":"NY","Est. DWP ($B)":0.9,"ICP Fit (0-100)":72.0,"Intent (0-100)":45.0,"Intent Trend":"Flat","Buying Stage":"Consideration","Engaged Contacts":5.0,"Top Persona Engaged":"VP Claims Technology","Web Visits 30d":188.0,"Content DLs 30d":2.0,"Exec Ad Impr. 30d":750.0,"Last Touch":"2026-07-11","Days Since Touch":20.0,"Meetings QTD":2.0,"Deal Stage":"Discovery","Open Pipeline ($)":67990.0,"Pilot Status":"None","First-Touch Channel":"Conference","Account Owner":"Marcus Hill","Momentum Signal":"Active discovery; qualifying pain and sponsor."},{"Account":"NJM Insurance","Tier":3.0,"Segment":"Personal Auto + WC","HQ":"NJ","Est. DWP ($B)":3.2,"ICP Fit (0-100)":56.0,"Intent (0-100)":40.0,"Intent Trend":"Cooling","Buying Stage":"Consideration","Engaged Contacts":4.0,"Top Persona Engaged":"Chief Claims Officer","Web Visits 30d":21.0,"Content DLs 30d":1.0,"Exec Ad Impr. 30d":268.0,"Last Touch":"2026-03-03","Days Since Touch":150.0,"Meetings QTD":0.0,"Deal Stage":"None","Open Pipeline ($)":0.0,"Pilot Status":"None","First-Touch Channel":"Conference","Account Owner":"Tom Becker","Momentum Signal":"Cold / early \u2014 no active motion."},{"Account":"Westfield","Tier":3.0,"Segment":"Commercial + Personal","HQ":"OH","Est. DWP ($B)":3.0,"ICP Fit (0-100)":79.0,"Intent (0-100)":29.0,"Intent Trend":"Rising","Buying Stage":"Awareness","Engaged Contacts":1.0,"Top Persona Engaged":"Chief AI Officer","Web Visits 30d":27.0,"Content DLs 30d":1.0,"Exec Ad Impr. 30d":242.0,"Last Touch":"2026-02-03","Days Since Touch":178.0,"Meetings QTD":0.0,"Deal Stage":"None","Open Pipeline ($)":0.0,"Pilot Status":"None","First-Touch Channel":"Event (ITC)","Account Owner":"Dana Reyes","Momentum Signal":"Cold / early \u2014 no active motion."},{"Account":"Selective Insurance","Tier":3.0,"Segment":"Commercial + WC","HQ":"NJ","Est. DWP ($B)":4.4,"ICP Fit (0-100)":76.0,"Intent (0-100)":66.0,"Intent Trend":"Cooling","Buying Stage":"Consideration","Engaged Contacts":7.0,"Top Persona Engaged":"Director, FNOL","Web Visits 30d":74.0,"Content DLs 30d":2.0,"Exec Ad Impr. 30d":345.0,"Last Touch":"2026-07-25","Days Since Touch":6.0,"Meetings QTD":2.0,"Deal Stage":"Discovery","Open Pipeline ($)":11062.0,"Pilot Status":"None","First-Touch Channel":"Event (ITC)","Account Owner":"Dana Reyes","Momentum Signal":"Active discovery; qualifying pain and sponsor."},{"Account":"Hanover Insurance","Tier":3.0,"Segment":"Commercial + Personal","HQ":"MA","Est. DWP ($B)":6.2,"ICP Fit (0-100)":60.0,"Intent (0-100)":34.0,"Intent Trend":"Cooling","Buying Stage":"Awareness","Engaged Contacts":3.0,"Top Persona Engaged":"SVP Claims Operations","Web Visits 30d":49.0,"Content DLs 30d":2.0,"Exec Ad Impr. 30d":155.0,"Last Touch":"2026-04-27","Days Since Touch":95.0,"Meetings QTD":0.0,"Deal Stage":"Closed Lost","Open Pipeline ($)":0.0,"Pilot Status":"None","First-Touch Channel":"Inbound (Content)","Account Owner":"Priya Nair","Momentum Signal":"Stalled on budget; re-open in FY27 planning."}]</script>
+<script type="application/json" id="data-signals">[{"Date":"2026-07-29","Account":"Mercury Insurance","Signal Type":"Content Engagement","Source":"HockeyStack","Detail":"Read 3 case studies in one session","Strength":"Low"},{"Date":"2026-07-29","Account":"State Farm","Signal Type":"Exec Ad Click","Source":"influ2","Detail":"CAIO engaged build-vs-buy ad creative","Strength":"Low"},{"Date":"2026-07-25","Account":"The Hartford","Signal Type":"Exec Ad Click","Source":"influ2","Detail":"CAIO engaged build-vs-buy ad creative","Strength":"Low"},{"Date":"2026-07-29","Account":"Travelers","Signal Type":"Hiring Signal","Source":"LinkedIn / Clay","Detail":"Scaling adjuster-enablement team","Strength":"High"},{"Date":"2026-07-27","Account":"CSAA (AAA)","Signal Type":"Exec Ad Click","Source":"influ2","Detail":"CAIO engaged build-vs-buy ad creative","Strength":"Medium"},{"Date":"2026-07-28","Account":"Zurich N.A.","Signal Type":"Web Surge","Source":"HockeyStack","Detail":"Return visits from 4 distinct stakeholders","Strength":"Low"},{"Date":"2026-07-19","Account":"Travelers","Signal Type":"Funding / News","Source":"News / Clay","Detail":"Named new claims core-system replacement","Strength":"High"},{"Date":"2026-07-17","Account":"State Farm","Signal Type":"Funding / News","Source":"News / Clay","Detail":"Earnings call flagged LAE pressure","Strength":"Medium"},{"Date":"2026-07-20","Account":"Plymouth Rock","Signal Type":"RFP / Intent","Source":"6sense","Detail":"Spike in 'claims triage AI' search intent","Strength":"Medium"},{"Date":"2026-07-21","Account":"Allstate","Signal Type":"Event Interaction","Source":"ITC / Events","Detail":"Booked booth meeting at Insurtech Connect","Strength":"Low"},{"Date":"2026-07-25","Account":"Westfield","Signal Type":"Pilot Milestone","Source":"Assured Product","Detail":"FNOL pilot hit 92% intake-accuracy checkpoint","Strength":"Low"},{"Date":"2026-07-20","Account":"Root Insurance","Signal Type":"Exec Ad Click","Source":"influ2","Detail":"CAIO engaged build-vs-buy ad creative","Strength":"High"},{"Date":"2026-07-18","Account":"American Family","Signal Type":"Hiring Signal","Source":"LinkedIn / Clay","Detail":"Hiring Director of FNOL Modernization","Strength":"Low"},{"Date":"2026-07-28","Account":"Selective Insurance","Signal Type":"Job Change","Source":"6sense / Clay","Detail":"New Chief Claims Officer appointed","Strength":"High"},{"Date":"2026-07-27","Account":"AIG","Signal Type":"Exec Ad Click","Source":"influ2","Detail":"3 execs on account clicked the same campaign","Strength":"High"},{"Date":"2026-07-21","Account":"USAA","Signal Type":"Pilot Milestone","Source":"Assured Product","Detail":"Adoption crossed 80% of intake volume","Strength":"High"},{"Date":"2026-07-06","Account":"American Family","Signal Type":"Pilot Milestone","Source":"Assured Product","Detail":"FNOL pilot hit 92% intake-accuracy checkpoint","Strength":"Low"},{"Date":"2026-07-25","Account":"Erie Insurance","Signal Type":"Web Surge","Source":"HockeyStack","Detail":"Spike after exec-ad campaign launch","Strength":"Low"},{"Date":"2026-07-12","Account":"Progressive","Signal Type":"Pilot Milestone","Source":"Assured Product","Detail":"Pilot expanded to property line","Strength":"Low"},{"Date":"2026-07-30","Account":"Zurich N.A.","Signal Type":"Exec Ad Click","Source":"influ2","Detail":"CAIO engaged build-vs-buy ad creative","Strength":"Low"},{"Date":"2026-07-16","Account":"Mercury Insurance","Signal Type":"RFP / Intent","Source":"6sense","Detail":"Active RFP for claims-intake automation detected","Strength":"Medium"},{"Date":"2026-07-08","Account":"Nationwide","Signal Type":"Exec Ad Click","Source":"influ2","Detail":"CAIO engaged build-vs-buy ad creative","Strength":"Low"},{"Date":"2026-07-11","Account":"Zurich N.A.","Signal Type":"Exec Ad Click","Source":"influ2","Detail":"CAIO engaged build-vs-buy ad creative","Strength":"High"},{"Date":"2026-07-19","Account":"Chubb","Signal Type":"Web Surge","Source":"HockeyStack","Detail":"Spike after exec-ad campaign launch","Strength":"High"},{"Date":"2026-07-25","Account":"Zurich N.A.","Signal Type":"RFP / Intent","Source":"6sense","Detail":"Active RFP for claims-intake automation detected","Strength":"Medium"},{"Date":"2026-07-24","Account":"Lemonade","Signal Type":"Funding / News","Source":"News / Clay","Detail":"Earnings call flagged LAE pressure","Strength":"Medium"},{"Date":"2026-07-27","Account":"Farmers Insurance","Signal Type":"Funding / News","Source":"News / Clay","Detail":"Named new claims core-system replacement","Strength":"Medium"},{"Date":"2026-07-21","Account":"Travelers","Signal Type":"Hiring Signal","Source":"LinkedIn / Clay","Detail":"Posted 4 roles for claims-automation / ML engineers","Strength":"Medium"},{"Date":"2026-07-23","Account":"Nationwide","Signal Type":"Content Engagement","Source":"HockeyStack","Detail":"Read 3 case studies in one session","Strength":"Low"},{"Date":"2026-07-04","Account":"Liberty Mutual","Signal Type":"Job Change","Source":"6sense / Clay","Detail":"VP Claims Transformation joined from a competitor","Strength":"Medium"},{"Date":"2026-07-19","Account":"Erie Insurance","Signal Type":"Web Surge","Source":"HockeyStack","Detail":"Pricing + platform pages viewed 5x vs. baseline","Strength":"High"},{"Date":"2026-07-23","Account":"Root Insurance","Signal Type":"Job Change","Source":"6sense / Clay","Detail":"New Chief Claims Officer appointed","Strength":"Medium"},{"Date":"2026-07-15","Account":"American Family","Signal Type":"RFP / Intent","Source":"6sense","Detail":"Evaluating FNOL vendors \u2014 competitor pages viewed","Strength":"Medium"},{"Date":"2026-07-23","Account":"Lemonade","Signal Type":"Content Engagement","Source":"HockeyStack","Detail":"Downloaded 'LAE Reduction with Agentic Claims' brief","Strength":"Low"},{"Date":"2026-07-17","Account":"American Family","Signal Type":"Pilot Milestone","Source":"Assured Product","Detail":"Adoption crossed 80% of intake volume","Strength":"Medium"},{"Date":"2026-07-30","Account":"Nationwide","Signal Type":"Job Change","Source":"6sense / Clay","Detail":"New Chief AI Officer hired from a hyperscaler","Strength":"Medium"},{"Date":"2026-07-16","Account":"Root Insurance","Signal Type":"Funding / News","Source":"News / Clay","Detail":"Earnings call flagged LAE pressure","Strength":"High"},{"Date":"2026-07-17","Account":"Erie Insurance","Signal Type":"Web Surge","Source":"HockeyStack","Detail":"Return visits from 4 distinct stakeholders","Strength":"High"},{"Date":"2026-07-27","Account":"Allstate","Signal Type":"Content Engagement","Source":"HockeyStack","Detail":"Downloaded 'LAE Reduction with Agentic Claims' brief","Strength":"Medium"},{"Date":"2026-07-09","Account":"Sentry Insurance","Signal Type":"Hiring Signal","Source":"LinkedIn / Clay","Detail":"Scaling adjuster-enablement team","Strength":"Medium"},{"Date":"2026-07-14","Account":"Root Insurance","Signal Type":"Funding / News","Source":"News / Clay","Detail":"Announced multi-year claims-modernization program","Strength":"Low"},{"Date":"2026-07-13","Account":"State Farm","Signal Type":"RFP / Intent","Source":"6sense","Detail":"Active RFP for claims-intake automation detected","Strength":"Low"},{"Date":"2026-07-11","Account":"Zurich N.A.","Signal Type":"Exec Ad Click","Source":"influ2","Detail":"CCO clicked exec ad twice this week","Strength":"High"},{"Date":"2026-07-07","Account":"Zurich N.A.","Signal Type":"Pilot Milestone","Source":"Assured Product","Detail":"Adoption crossed 80% of intake volume","Strength":"High"},{"Date":"2026-07-13","Account":"Progressive","Signal Type":"Exec Ad Click","Source":"influ2","Detail":"3 execs on account clicked the same campaign","Strength":"High"},{"Date":"2026-07-31","Account":"USAA","Signal Type":"Content Engagement","Source":"HockeyStack","Detail":"Shared ROI one-pager internally (multi-touch)","Strength":"High"},{"Date":"2026-07-21","Account":"Nationwide","Signal Type":"Funding / News","Source":"News / Clay","Detail":"Named new claims core-system replacement","Strength":"Medium"},{"Date":"2026-07-15","Account":"Hanover Insurance","Signal Type":"Content Engagement","Source":"HockeyStack","Detail":"Read 3 case studies in one session","Strength":"High"},{"Date":"2026-07-09","Account":"Travelers","Signal Type":"Job Change","Source":"6sense / Clay","Detail":"New Chief Claims Officer appointed","Strength":"Medium"},{"Date":"2026-07-16","Account":"Progressive","Signal Type":"Job Change","Source":"6sense / Clay","Detail":"New Chief AI Officer hired from a hyperscaler","Strength":"Low"},{"Date":"2026-07-23","Account":"Zurich N.A.","Signal Type":"Pilot Milestone","Source":"Assured Product","Detail":"FNOL pilot hit 92% intake-accuracy checkpoint","Strength":"High"},{"Date":"2026-07-16","Account":"The Hartford","Signal Type":"Event Interaction","Source":"ITC / Events","Detail":"Booked booth meeting at Insurtech Connect","Strength":"High"},{"Date":"2026-07-10","Account":"Farmers Insurance","Signal Type":"Pilot Milestone","Source":"Assured Product","Detail":"Pilot expanded to property line","Strength":"Medium"},{"Date":"2026-07-04","Account":"State Farm","Signal Type":"Exec Ad Click","Source":"influ2","Detail":"3 execs on account clicked the same campaign","Strength":"Medium"},{"Date":"2026-07-22","Account":"Travelers","Signal Type":"Funding / News","Source":"News / Clay","Detail":"Announced multi-year claims-modernization program","Strength":"Low"}]</script>
+<script type="application/json" id="data-contacts">[{"Contact":"Jordan Kim","Title":"Director, FNOL & Intake","Persona":"Director, FNOL","Account":"State Farm","Seniority":"Director","Engagement (0-100)":79.0,"Exec Ad Impr. 30d":287.0,"Email Opens 30d":14.0,"Last Activity":"2026-07-22","Last Activity Type":"Downloaded ROI brief","Buying Role":"Champion","LinkedIn Follows Assured":"Yes"},{"Contact":"Alex Patel","Title":"Head of Claims Transformation","Persona":"Head of Claims Transformation","Account":"State Farm","Seniority":"Director","Engagement (0-100)":43.0,"Exec Ad Impr. 30d":233.0,"Email Opens 30d":1.0,"Last Activity":"2026-07-18","Last Activity Type":"Opened sequence","Buying Role":"Technical Buyer","LinkedIn Follows Assured":"Yes"},{"Contact":"Priya Nguyen","Title":"Chief AI Officer / Head of AI","Persona":"Chief AI Officer","Account":"State Farm","Seniority":"C-Suite","Engagement (0-100)":77.0,"Exec Ad Impr. 30d":692.0,"Email Opens 30d":6.0,"Last Activity":"2026-07-28","Last Activity Type":"Attended webinar","Buying Role":"Technical Buyer","LinkedIn Follows Assured":"Yes"},{"Contact":"Michael Johnson","Title":"Chief Innovation Officer","Persona":"Chief Innovation Officer","Account":"Progressive","Seniority":"C-Suite","Engagement (0-100)":51.0,"Exec Ad Impr. 30d":481.0,"Email Opens 30d":7.0,"Last Activity":"2026-07-23","Last Activity Type":"LinkedIn engagement","Buying Role":"Economic Buyer","LinkedIn Follows Assured":"Yes"},{"Contact":"Sarah Martinez","Title":"Chief AI Officer / Head of AI","Persona":"Chief AI Officer","Account":"Progressive","Seniority":"C-Suite","Engagement (0-100)":91.0,"Exec Ad Impr. 30d":1197.0,"Email Opens 30d":2.0,"Last Activity":"2026-07-09","Last Activity Type":"Demo attended","Buying Role":"Champion","LinkedIn Follows Assured":"Yes"},{"Contact":"David Cohen","Title":"VP, Claims Technology","Persona":"VP Claims Technology","Account":"Berkshire / GEICO","Seniority":"VP","Engagement (0-100)":41.0,"Exec Ad Impr. 30d":120.0,"Email Opens 30d":5.0,"Last Activity":"2026-07-20","Last Activity Type":"Replied to exec ad","Buying Role":"Technical Buyer","LinkedIn Follows Assured":"Yes"},{"Contact":"Emily Okafor","Title":"Head of Claims Transformation","Persona":"Head of Claims Transformation","Account":"Berkshire / GEICO","Seniority":"Director","Engagement (0-100)":36.0,"Exec Ad Impr. 30d":254.0,"Email Opens 30d":7.0,"Last Activity":"2026-07-08","Last Activity Type":"Replied to exec ad","Buying Role":"Influencer","LinkedIn Follows Assured":"Yes"},{"Contact":"Carlos Reyes","Title":"SVP, Claims Operations","Persona":"SVP Claims Operations","Account":"Berkshire / GEICO","Seniority":"SVP","Engagement (0-100)":48.0,"Exec Ad Impr. 30d":805.0,"Email Opens 30d":8.0,"Last Activity":"2026-07-28","Last Activity Type":"Replied to exec ad","Buying Role":"Champion","LinkedIn Follows Assured":"Yes"},{"Contact":"Rachel Sullivan","Title":"VP, Claims","Persona":"VP Claims","Account":"Berkshire / GEICO","Seniority":"VP","Engagement (0-100)":20.0,"Exec Ad Impr. 30d":155.0,"Email Opens 30d":4.0,"Last Activity":"2026-07-29","Last Activity Type":"Demo attended","Buying Role":"Champion","LinkedIn Follows Assured":"Yes"},{"Contact":"Kevin Zhang","Title":"VP, Claims Technology","Persona":"VP Claims Technology","Account":"Liberty Mutual","Seniority":"VP","Engagement (0-100)":93.0,"Exec Ad Impr. 30d":152.0,"Email Opens 30d":6.0,"Last Activity":"2026-07-26","Last Activity Type":"Downloaded ROI brief","Buying Role":"End User","LinkedIn Follows Assured":"No"},{"Contact":"Aisha Brooks","Title":"Director, FNOL & Intake","Persona":"Director, FNOL","Account":"Liberty Mutual","Seniority":"Director","Engagement (0-100)":66.0,"Exec Ad Impr. 30d":187.0,"Email Opens 30d":1.0,"Last Activity":"2026-07-22","Last Activity Type":"Replied to exec ad","Buying Role":"Champion","LinkedIn Follows Assured":"Yes"},{"Contact":"Brian Delgado","Title":"Head of Claims Transformation","Persona":"Head of Claims Transformation","Account":"Travelers","Seniority":"Director","Engagement (0-100)":75.0,"Exec Ad Impr. 30d":65.0,"Email Opens 30d":12.0,"Last Activity":"2026-07-22","Last Activity Type":"Replied to exec ad","Buying Role":"End User","LinkedIn Follows Assured":"Yes"},{"Contact":"Nina Foster","Title":"Chief Claims Officer","Persona":"Chief Claims Officer","Account":"Travelers","Seniority":"C-Suite","Engagement (0-100)":39.0,"Exec Ad Impr. 30d":741.0,"Email Opens 30d":13.0,"Last Activity":"2026-07-27","Last Activity Type":"Opened sequence","Buying Role":"Economic Buyer","LinkedIn Follows Assured":"Yes"},{"Contact":"Sam Hughes","Title":"VP, Claims Technology","Persona":"VP Claims Technology","Account":"USAA","Seniority":"VP","Engagement (0-100)":17.0,"Exec Ad Impr. 30d":289.0,"Email Opens 30d":11.0,"Last Activity":"2026-07-23","Last Activity Type":"Replied to exec ad","Buying Role":"Champion","LinkedIn Follows Assured":"Yes"},{"Contact":"Laura Ibrahim","Title":"VP, Claims","Persona":"VP Claims","Account":"USAA","Seniority":"VP","Engagement (0-100)":18.0,"Exec Ad Impr. 30d":112.0,"Email Opens 30d":3.0,"Last Activity":"2026-07-21","Last Activity Type":"LinkedIn engagement","Buying Role":"Technical Buyer","LinkedIn Follows Assured":"No"},{"Contact":"Derek Walsh","Title":"Head of Claims Transformation","Persona":"Head of Claims Transformation","Account":"USAA","Seniority":"Director","Engagement (0-100)":63.0,"Exec Ad Impr. 30d":125.0,"Email Opens 30d":4.0,"Last Activity":"2026-07-16","Last Activity Type":"Downloaded ROI brief","Buying Role":"Champion","LinkedIn Follows Assured":"Yes"},{"Contact":"Monica Chen","Title":"Chief AI Officer / Head of AI","Persona":"Chief AI Officer","Account":"USAA","Seniority":"C-Suite","Engagement (0-100)":37.0,"Exec Ad Impr. 30d":237.0,"Email Opens 30d":4.0,"Last Activity":"2026-07-29","Last Activity Type":"Replied to exec ad","Buying Role":"Economic Buyer","LinkedIn Follows Assured":"No"},{"Contact":"Raj Novak","Title":"SVP, Claims Operations","Persona":"SVP Claims Operations","Account":"Nationwide","Seniority":"SVP","Engagement (0-100)":94.0,"Exec Ad Impr. 30d":1115.0,"Email Opens 30d":1.0,"Last Activity":"2026-07-09","Last Activity Type":"Demo attended","Buying Role":"Influencer","LinkedIn Follows Assured":"No"},{"Contact":"Karen Park","Title":"Head of Claims Transformation","Persona":"Head of Claims Transformation","Account":"Nationwide","Seniority":"Director","Engagement (0-100)":66.0,"Exec Ad Impr. 30d":299.0,"Email Opens 30d":13.0,"Last Activity":"2026-07-18","Last Activity Type":"Downloaded ROI brief","Buying Role":"Technical Buyer","LinkedIn Follows Assured":"No"},{"Contact":"Paul Reddy","Title":"Director, FNOL & Intake","Persona":"Director, FNOL","Account":"Nationwide","Seniority":"Director","Engagement (0-100)":48.0,"Exec Ad Impr. 30d":137.0,"Email Opens 30d":5.0,"Last Activity":"2026-07-24","Last Activity Type":"Demo attended","Buying Role":"Champion","LinkedIn Follows Assured":"Yes"},{"Contact":"Grace Klein","Title":"Chief AI Officer / Head of AI","Persona":"Chief AI Officer","Account":"Nationwide","Seniority":"C-Suite","Engagement (0-100)":57.0,"Exec Ad Impr. 30d":311.0,"Email Opens 30d":13.0,"Last Activity":"2026-07-26","Last Activity Type":"Replied to exec ad","Buying Role":"Economic Buyer","LinkedIn Follows Assured":"No"},{"Contact":"Victor Osei","Title":"Head of Claims Transformation","Persona":"Head of Claims Transformation","Account":"Farmers Insurance","Seniority":"Director","Engagement (0-100)":20.0,"Exec Ad Impr. 30d":215.0,"Email Opens 30d":13.0,"Last Activity":"2026-07-14","Last Activity Type":"LinkedIn engagement","Buying Role":"Technical Buyer","LinkedIn Follows Assured":"No"},{"Contact":"Lena Vance","Title":"SVP, Claims Operations","Persona":"SVP Claims Operations","Account":"Farmers Insurance","Seniority":"SVP","Engagement (0-100)":30.0,"Exec Ad Impr. 30d":800.0,"Email Opens 30d":0.0,"Last Activity":"2026-07-16","Last Activity Type":"Attended webinar","Buying Role":"Champion","LinkedIn Follows Assured":"Yes"},{"Contact":"Omar Marsh","Title":"Chief AI Officer / Head of AI","Persona":"Chief AI Officer","Account":"Farmers Insurance","Seniority":"C-Suite","Engagement (0-100)":43.0,"Exec Ad Impr. 30d":207.0,"Email Opens 30d":4.0,"Last Activity":"2026-07-19","Last Activity Type":"Meeting held","Buying Role":"End User","LinkedIn Follows Assured":"Yes"},{"Contact":"Jordan Kim","Title":"Chief Claims Officer","Persona":"Chief Claims Officer","Account":"Farmers Insurance","Seniority":"C-Suite","Engagement (0-100)":30.0,"Exec Ad Impr. 30d":270.0,"Email Opens 30d":14.0,"Last Activity":"2026-07-21","Last Activity Type":"Attended webinar","Buying Role":"Technical Buyer","LinkedIn Follows Assured":"Yes"},{"Contact":"Alex Patel","Title":"Chief Innovation Officer","Persona":"Chief Innovation Officer","Account":"American Family","Seniority":"C-Suite","Engagement (0-100)":20.0,"Exec Ad Impr. 30d":1172.0,"Email Opens 30d":4.0,"Last Activity":"2026-07-14","Last Activity Type":"LinkedIn engagement","Buying Role":"Champion","LinkedIn Follows Assured":"Yes"},{"Contact":"Priya Nguyen","Title":"SVP, Claims Operations","Persona":"SVP Claims Operations","Account":"American Family","Seniority":"SVP","Engagement (0-100)":47.0,"Exec Ad Impr. 30d":210.0,"Email Opens 30d":1.0,"Last Activity":"2026-07-22","Last Activity Type":"Demo attended","Buying Role":"Economic Buyer","LinkedIn Follows Assured":"Yes"},{"Contact":"Michael Johnson","Title":"Chief Claims Officer","Persona":"Chief Claims Officer","Account":"Erie Insurance","Seniority":"C-Suite","Engagement (0-100)":34.0,"Exec Ad Impr. 30d":823.0,"Email Opens 30d":10.0,"Last Activity":"2026-07-23","Last Activity Type":"Replied to exec ad","Buying Role":"End User","LinkedIn Follows Assured":"No"},{"Contact":"Sarah Martinez","Title":"SVP, Claims Operations","Persona":"SVP Claims Operations","Account":"Erie Insurance","Seniority":"SVP","Engagement (0-100)":69.0,"Exec Ad Impr. 30d":517.0,"Email Opens 30d":10.0,"Last Activity":"2026-07-08","Last Activity Type":"Demo attended","Buying Role":"End User","LinkedIn Follows Assured":"Yes"},{"Contact":"David Cohen","Title":"Director, FNOL & Intake","Persona":"Director, FNOL","Account":"Erie Insurance","Seniority":"Director","Engagement (0-100)":63.0,"Exec Ad Impr. 30d":186.0,"Email Opens 30d":11.0,"Last Activity":"2026-07-15","Last Activity Type":"Attended webinar","Buying Role":"Technical Buyer","LinkedIn Follows Assured":"No"},{"Contact":"Emily Okafor","Title":"VP, Claims","Persona":"VP Claims","Account":"The Hartford","Seniority":"VP","Engagement (0-100)":75.0,"Exec Ad Impr. 30d":239.0,"Email Opens 30d":11.0,"Last Activity":"2026-07-08","Last Activity Type":"Demo attended","Buying Role":"End User","LinkedIn Follows Assured":"Yes"},{"Contact":"Carlos Reyes","Title":"Chief Claims Officer","Persona":"Chief Claims Officer","Account":"The Hartford","Seniority":"C-Suite","Engagement (0-100)":93.0,"Exec Ad Impr. 30d":1272.0,"Email Opens 30d":12.0,"Last Activity":"2026-07-14","Last Activity Type":"Downloaded ROI brief","Buying Role":"Economic Buyer","LinkedIn Follows Assured":"No"},{"Contact":"Rachel Sullivan","Title":"Chief Innovation Officer","Persona":"Chief Innovation Officer","Account":"The Hartford","Seniority":"C-Suite","Engagement (0-100)":72.0,"Exec Ad Impr. 30d":670.0,"Email Opens 30d":1.0,"Last Activity":"2026-07-30","Last Activity Type":"Replied to exec ad","Buying Role":"Champion","LinkedIn Follows Assured":"No"},{"Contact":"Kevin Zhang","Title":"Head of Claims Transformation","Persona":"Head of Claims Transformation","Account":"The Hartford","Seniority":"Director","Engagement (0-100)":58.0,"Exec Ad Impr. 30d":73.0,"Email Opens 30d":6.0,"Last Activity":"2026-07-16","Last Activity Type":"Downloaded ROI brief","Buying Role":"Economic Buyer","LinkedIn Follows Assured":"No"},{"Contact":"Aisha Brooks","Title":"SVP, Claims Operations","Persona":"SVP Claims Operations","Account":"Cincinnati Financial","Seniority":"SVP","Engagement (0-100)":31.0,"Exec Ad Impr. 30d":206.0,"Email Opens 30d":7.0,"Last Activity":"2026-07-28","Last Activity Type":"LinkedIn engagement","Buying Role":"End User","LinkedIn Follows Assured":"No"},{"Contact":"Brian Delgado","Title":"Director, FNOL & Intake","Persona":"Director, FNOL","Account":"Cincinnati Financial","Seniority":"Director","Engagement (0-100)":20.0,"Exec Ad Impr. 30d":289.0,"Email Opens 30d":1.0,"Last Activity":"2026-07-07","Last Activity Type":"LinkedIn engagement","Buying Role":"Influencer","LinkedIn Follows Assured":"Yes"},{"Contact":"Nina Foster","Title":"Head of Claims Transformation","Persona":"Head of Claims Transformation","Account":"Zurich N.A.","Seniority":"Director","Engagement (0-100)":61.0,"Exec Ad Impr. 30d":125.0,"Email Opens 30d":3.0,"Last Activity":"2026-07-07","Last Activity Type":"LinkedIn engagement","Buying Role":"Influencer","LinkedIn Follows Assured":"Yes"},{"Contact":"Sam Hughes","Title":"Chief AI Officer / Head of AI","Persona":"Chief AI Officer","Account":"Zurich N.A.","Seniority":"C-Suite","Engagement (0-100)":69.0,"Exec Ad Impr. 30d":983.0,"Email Opens 30d":1.0,"Last Activity":"2026-07-15","Last Activity Type":"LinkedIn engagement","Buying Role":"Technical Buyer","LinkedIn Follows Assured":"Yes"},{"Contact":"Laura Ibrahim","Title":"SVP, Claims Operations","Persona":"SVP Claims Operations","Account":"Root Insurance","Seniority":"SVP","Engagement (0-100)":56.0,"Exec Ad Impr. 30d":720.0,"Email Opens 30d":10.0,"Last Activity":"2026-07-07","Last Activity Type":"LinkedIn engagement","Buying Role":"Technical Buyer","LinkedIn Follows Assured":"No"},{"Contact":"Derek Walsh","Title":"Chief Claims Officer","Persona":"Chief Claims Officer","Account":"Root Insurance","Seniority":"C-Suite","Engagement (0-100)":71.0,"Exec Ad Impr. 30d":473.0,"Email Opens 30d":0.0,"Last Activity":"2026-07-15","Last Activity Type":"Replied to exec ad","Buying Role":"Influencer","LinkedIn Follows Assured":"Yes"},{"Contact":"Monica Chen","Title":"Head of Claims Transformation","Persona":"Head of Claims Transformation","Account":"Root Insurance","Seniority":"Director","Engagement (0-100)":78.0,"Exec Ad Impr. 30d":70.0,"Email Opens 30d":11.0,"Last Activity":"2026-07-24","Last Activity Type":"LinkedIn engagement","Buying Role":"Influencer","LinkedIn Follows Assured":"Yes"},{"Contact":"Raj Novak","Title":"Chief AI Officer / Head of AI","Persona":"Chief AI Officer","Account":"Root Insurance","Seniority":"C-Suite","Engagement (0-100)":80.0,"Exec Ad Impr. 30d":1257.0,"Email Opens 30d":4.0,"Last Activity":"2026-07-16","Last Activity Type":"Opened sequence","Buying Role":"Influencer","LinkedIn Follows Assured":"Yes"}]</script>
+
+<script>
+(function () {
+  const ACCOUNTS = JSON.parse(document.getElementById('data-accounts').textContent);
+  const SIGNALS = JSON.parse(document.getElementById('data-signals').textContent);
+  const CONTACTS = JSON.parse(document.getElementById('data-contacts').textContent);
+
+  // No hand-written previews here — the button below calls the live
+  // agent (api/generate_brief.py) and renders whatever it actually
+  // returns, in its real output contract (see Agent Architecture tab).
+
+  function setModalState(state) {
+    document.getElementById('modal-loading').style.display = state === 'loading' ? '' : 'none';
+    document.getElementById('modal-error').style.display = state === 'error' ? '' : 'none';
+    document.getElementById('modal-content').style.display = state === 'content' ? '' : 'none';
+  }
+
+  function renderBrief(b) {
+    document.getElementById('modal-summary').textContent = b.situation_summary;
+    document.getElementById('modal-risk').textContent = b.risk_or_opportunity;
+    document.getElementById('modal-nba-action').textContent = b.next_best_action.action;
+    document.getElementById('modal-nba-rationale').textContent = b.next_best_action.rationale;
+
+    const sigWrap = document.getElementById('modal-signals');
+    sigWrap.innerHTML = b.key_signals.length
+      ? b.key_signals.map(s => `<div class="modal-signal"><b>${s.date}</b><span>· ${s.type} — ${s.detail}</span></div>`).join('')
+      : '<div class="modal-empty">No discrete Signals-feed event in the lookback window.</div>';
+
+    const chip = document.getElementById('modal-confidence');
+    chip.textContent = b.confidence;
+    chip.className = 'confidence-chip ' + b.confidence;
+
+    const gapsWrap = document.getElementById('modal-gaps-wrap');
+    if (b.data_gaps.length) {
+      gapsWrap.style.display = '';
+      document.getElementById('modal-gaps').textContent = b.data_gaps.join(' ');
+    } else {
+      gapsWrap.style.display = 'none';
+    }
+
+    setModalState('content');
+  }
+
+  window.openBrief = async function (accountName) {
+    document.getElementById('modal-account').textContent = accountName;
+    document.getElementById('brief-modal').classList.add('open');
+    setModalState('loading');
+
+    let res, result;
+    try {
+      res = await fetch(`/api/generate_brief?account=${encodeURIComponent(accountName)}`);
+      result = await res.json();
+    } catch (err) {
+      document.getElementById('modal-error').textContent =
+        'Could not reach the live agent from here. This static copy has no backend to call — ' +
+        'see it running for real on the deployed site.';
+      setModalState('error');
+      return;
+    }
+
+    if (!res.ok) {
+      document.getElementById('modal-error').textContent = result.error || 'The agent call failed.';
+      setModalState('error');
+      return;
+    }
+    if (result.status === 'insufficient_data') {
+      document.getElementById('modal-error').textContent = result.reason;
+      setModalState('error');
+      return;
+    }
+    if (result.status === 'grounding_failed') {
+      document.getElementById('modal-error').textContent =
+        "The model's draft didn't pass the grounding check (it cited something not in the input), " +
+        'so it was never delivered. Close this and try again.';
+      setModalState('error');
+      return;
+    }
+    renderBrief(result.brief);
+  };
+
+  window.closeBrief = function () {
+    document.getElementById('brief-modal').classList.remove('open');
+  };
+
+  const fmtMoney = (n) => {
+    if (!n) return '—';
+    if (n >= 1000000) return '$' + (n / 1000000).toFixed(2) + 'M';
+    if (n >= 1000) return '$' + Math.round(n / 1000) + 'K';
+    return '$' + n;
+  };
+  const daysClass = (d) => d <= 7 ? 'days-good' : d <= 21 ? '' : d <= 60 ? 'days-warn' : 'days-bad';
+
+  const trendBadge = (trend) => {
+    const map = {
+      Rising: { cls: 'trend-rising', arrow: '▲' },
+      Flat: { cls: 'trend-flat', arrow: '▬' },
+      Cooling: { cls: 'trend-cooling', arrow: '▼' }
+    };
+    const m = map[trend] || map.Flat;
+    return `<span class="badge ${m.cls}">${m.arrow} ${trend}</span>`;
+  };
+  const pilotBadge = (status) => {
+    const map = { 'None': 'pilot-none', 'FNOL Pilot': 'pilot-fnol', 'In Production': 'pilot-prod' };
+    return `<span class="badge ${map[status] || 'pilot-none'}">${status}</span>`;
+  };
+  const dealBadge = (stage) => {
+    const map = { 'None': 'deal-none', 'Discovery': 'deal-discovery', 'Pilot': 'deal-pilot', 'Expansion': 'deal-expansion', 'Closed Won': 'deal-expansion', 'Closed Lost': 'deal-lost' };
+    return `<span class="badge ${map[stage] || 'deal-none'}">${stage}</span>`;
+  };
+  const meter = (val) => `<div class="meter-wrap"><div class="meter-track"><div class="meter-fill" style="width:${val}%"></div></div><span class="meter-num">${val}</span></div>`;
+
+  // CAIO / new-executive freshness check: is there a recent Job Change signal
+  // for a Chief AI Officer that postdates the matching contact's last known activity?
+  // (or no matching contact exists at all) -- flags a stale/incomplete contact roster.
+  const caioRiskFlag = (account) => {
+    const jc = SIGNALS.find(s => s.Account === account && s['Signal Type'] === 'Job Change' && /Chief AI Officer|CAIO/i.test(s.Detail));
+    if (!jc) return null;
+    const contact = CONTACTS.find(c => c.Account === account && /Chief AI Officer/i.test(c.Persona || ''));
+    const stale = !contact || new Date(contact['Last Activity']) < new Date(jc.Date);
+    if (!stale) return null;
+    return { signal: jc, contact };
+  };
+
+  const fmtDate = (d) => new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const firstClause = (text) => text.split(/(?<=[.!?])\s/)[0];
+
+  // ---------- stats ----------
+  const totalPipeline = ACCOUNTS.reduce((s, a) => s + a['Open Pipeline ($)'], 0);
+  const risingCount = ACCOUNTS.filter(a => a['Intent Trend'] === 'Rising').length;
+  const pilotCount = ACCOUNTS.filter(a => a['Pilot Status'] === 'FNOL Pilot').length;
+  const prodCount = ACCOUNTS.filter(a => a['Pilot Status'] === 'In Production').length;
+  const actNowList = ACCOUNTS.filter(a => a['Intent (0-100)'] >= 60 && a['Meetings QTD'] === 0)
+    .sort((a, b) => b['Intent (0-100)'] - a['Intent (0-100)']);
+
+  document.getElementById('stats').innerHTML = [
+    { label: 'Open Pipeline', value: fmtMoney(totalPipeline), sub: '30 named accounts', color: 'var(--spec-blue)' },
+    { label: 'Act Now', value: actNowList.length, sub: 'high intent, no meeting', color: 'var(--spec-magenta)' },
+    { label: 'Pilots in Flight', value: pilotCount, sub: 'FNOL live, pre-expansion', color: 'var(--spec-violet)' },
+    { label: 'In Production', value: prodCount, sub: 'protect & expand', color: 'var(--spec-gold)' },
+    { label: 'Rising Momentum', value: risingCount + ' / 30', sub: 'trailing 4 weeks', color: 'var(--spec-blue)' }
+  ].map(s => `<div class="stat-tile" style="border-top-color:${s.color}"><div class="stat-label">${s.label}</div><div class="stat-value">${s.value}</div><div class="stat-sub">${s.sub}</div></div>`).join('');
+
+  // ---------- act now cards ----------
+  // Act Now = high intent & no meeting booked, plus any pilot/production account carrying
+  // a live CAIO build-vs-buy risk flag (a different flavor of urgency: protect, not convert).
+  const actNowCards = [...actNowList];
+  ACCOUNTS.forEach(a => {
+    if (caioRiskFlag(a.Account) && !actNowCards.includes(a) && (a['Pilot Status'] !== 'None')) actNowCards.push(a);
+  });
+
+  document.getElementById('act-now').innerHTML = actNowCards.map(a => {
+    const risk = caioRiskFlag(a.Account);
+    const isNoMeeting = a['Intent (0-100)'] >= 60 && a['Meetings QTD'] === 0;
+    let nba;
+    if (risk) nba = 'Arm champion with build-vs-buy objection prep.';
+    else if (isNoMeeting) nba = 'Book a discovery meeting this week.';
+    else nba = 'Protect the pilot — schedule a check-in.';
+
+    const reasonTag = risk
+      ? '<span class="badge reason-caio">⚠ CAIO Build-vs-Buy Risk</span>'
+      : '<span class="badge reason-meeting">No Meeting Booked</span>';
+
+    return `<div class="acard ${risk ? 'risk' : 'urgent'}">
+      <div class="acard-top">
+        <div><div class="acard-name">${a.Account}</div><div class="acard-sub">Tier ${a.Tier} · Owner ${a['Account Owner']}</div></div>
+        ${trendBadge(a['Intent Trend'])}
+      </div>
+      <div>${reasonTag}</div>
+      <div class="acard-metrics">
+        <div class="metric"><span class="metric-label">Intent</span><span class="metric-value">${a['Intent (0-100)']}</span></div>
+        <div class="metric"><span class="metric-label">Pipeline</span><span class="metric-value">${fmtMoney(a['Open Pipeline ($)'])}</span></div>
+      </div>
+      <div class="acard-why">${firstClause(a['Momentum Signal'])}</div>
+      <div class="acard-nba"><span class="nba-label">Next Best Action</span><span class="nba-text">${nba}</span></div>
+      <button class="brief-btn" onclick="openBrief('${a.Account}')">Generate Brief</button>
+    </div>`;
+  }).join('');
+
+  // ---------- protect & expand ----------
+  const protectExpand = ACCOUNTS.filter(a => a['Deal Stage'] === 'Expansion');
+  document.getElementById('protect-expand').innerHTML = protectExpand.map(a => {
+    return `<div class="acard expand">
+      <div class="acard-top">
+        <div><div class="acard-name">${a.Account}</div><div class="acard-sub">Tier ${a.Tier} · Owner ${a['Account Owner']}</div></div>
+        ${trendBadge(a['Intent Trend'])}
+      </div>
+      <div class="acard-metrics">
+        <div class="metric"><span class="metric-label">Pipeline</span><span class="metric-value">${fmtMoney(a['Open Pipeline ($)'])}</span></div>
+        <div class="metric"><span class="metric-label">Days Since Touch</span><span class="metric-value">${a['Days Since Touch']}</span></div>
+      </div>
+      <div class="acard-why">${firstClause(a['Momentum Signal'])}</div>
+      <div class="acard-nba"><span class="nba-label">Next Best Action</span><span class="nba-text">Keep exec sponsor warm ahead of renewal.</span></div>
+      <button class="brief-btn" onclick="openBrief('${a.Account}')">Generate Brief</button>
+    </div>`;
+  }).join('');
+
+  // ---------- pilots table ----------
+  const pilots = ACCOUNTS.filter(a => a['Pilot Status'] === 'FNOL Pilot').sort((a, b) => b['Intent (0-100)'] - a['Intent (0-100)']);
+  document.getElementById('pilots-body').innerHTML = pilots.map(a => `<tr>
+    <td><span class="acct-name">${a.Account}</span></td>
+    <td>${dealBadge(a['Deal Stage'])}</td>
+    <td>${meter(a['Intent (0-100)'])}</td>
+    <td class="${daysClass(a['Days Since Touch'])}">${a['Days Since Touch']}d</td>
+    <td>${fmtMoney(a['Open Pipeline ($)'])}</td>
+    <td class="acct-owner">${a['Account Owner']}</td>
+    <td><button class="brief-btn compact" onclick="openBrief('${a.Account}')">Generate Brief</button></td>
+  </tr>`).join('');
+
+  // ---------- full grid ----------
+  let sortKey = 'Intent (0-100)', sortDir = -1;
+  const dealStages = [...new Set(ACCOUNTS.map(a => a['Deal Stage']))].sort();
+  const pilotStatuses = [...new Set(ACCOUNTS.map(a => a['Pilot Status']))].sort();
+  document.getElementById('f-deal').innerHTML += dealStages.map(s => `<option value="${s}">${s}</option>`).join('');
+  document.getElementById('f-pilot').innerHTML += pilotStatuses.map(s => `<option value="${s}">${s}</option>`).join('');
+
+  function renderGrid() {
+    const q = document.getElementById('search').value.toLowerCase();
+    const tier = document.getElementById('f-tier').value;
+    const deal = document.getElementById('f-deal').value;
+    const pilot = document.getElementById('f-pilot').value;
+
+    let rows = ACCOUNTS.filter(a =>
+      (!q || a.Account.toLowerCase().includes(q) || a['Account Owner'].toLowerCase().includes(q)) &&
+      (!tier || String(a.Tier) === tier) &&
+      (!deal || a['Deal Stage'] === deal) &&
+      (!pilot || a['Pilot Status'] === pilot)
+    );
+    rows.sort((a, b) => {
+      const av = a[sortKey], bv = b[sortKey];
+      if (typeof av === 'number') return (av - bv) * sortDir;
+      return String(av).localeCompare(String(bv)) * sortDir;
+    });
+
+    document.getElementById('row-count').textContent = rows.length + ' of ' + ACCOUNTS.length + ' accounts';
+    document.getElementById('grid-body').innerHTML = rows.map(a => `<tr>
+      <td><span class="acct-name">${a.Account}</span></td>
+      <td><span class="tier-chip">T${a.Tier}</span></td>
+      <td>${meter(a['Intent (0-100)'])} ${trendBadge(a['Intent Trend'])}</td>
+      <td>${a['Buying Stage']}</td>
+      <td>${dealBadge(a['Deal Stage'])}</td>
+      <td>${pilotBadge(a['Pilot Status'])}</td>
+      <td>${fmtMoney(a['Open Pipeline ($)'])}</td>
+      <td class="${daysClass(a['Days Since Touch'])}">${a['Days Since Touch']}d</td>
+      <td class="acct-owner">${a['Account Owner']}</td>
+    </tr>`).join('');
+
+    document.querySelectorAll('#grid-table th[data-key]').forEach(th => {
+      const arrow = th.querySelector('.arrow');
+      arrow.textContent = th.dataset.key === sortKey ? (sortDir === 1 ? '▲' : '▼') : '';
+    });
+  }
+
+  document.querySelectorAll('#grid-table th[data-key]').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.key;
+      if (sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = 1; }
+      renderGrid();
+    });
+  });
+  ['search', 'f-tier', 'f-deal', 'f-pilot'].forEach(id => document.getElementById(id).addEventListener('input', renderGrid));
+
+  renderGrid();
+})();
+</script>
+
+
+<script>
+  function showTab(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + name));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+</script>
