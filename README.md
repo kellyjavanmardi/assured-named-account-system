@@ -54,7 +54,7 @@ Trigger (dashboard button) → Retrieve → Quality Gate → Assemble Prompt →
 - CAIO hired, contact roster stale → flagged
 - **`pilot_signal_status_mismatch`** — a real data-quality issue found while building this: 7 of 30 accounts carry a "Pilot Milestone" product signal while their CRM `Pilot Status` field still says `None`. Flagged so the brief never implies a pilot that isn't on record.
 
-**Guardrails** enforced in the system prompt — every cited signal must literally exist in the input (checked as exact `(date, type, detail)` set membership post-hoc, not fuzzy-matched); no coverage/liability/claims-outcome determinations; no unsupported ROI/timeline/compliance promises; never reference another carrier's data.
+**Guardrails** enforced in the system prompt — every cited signal must literally exist in the input (checked as exact `(date, type, detail)` set membership post-hoc, not fuzzy-matched); no coverage/liability/claims-outcome determinations; no unsupported ROI/timeline/compliance promises; never reference another carrier's data. Fails closed: a signal that doesn't match is never silently delivered — the run returns `grounding_failed` with the offending citation instead.
 
 **Output** is a structured JSON brief (`output_config.format: json_schema`, all fields required, `additionalProperties: false`) — not free text — so it can be rendered, logged, or piped into CRM/Slack without a parsing layer.
 
@@ -68,7 +68,7 @@ Trigger (dashboard button) → Retrieve → Quality Gate → Assemble Prompt →
 | Alerting | Grounding-check failure rate > 5% pages the on-call owner |
 | Logging | Every run logs input, output, prompt version, latency, and token cost |
 
-**\*Where this goes next (not built):** ideally this fires itself — the moment a meeting lands on the calendar or a CRM stage flips to "meeting set," the same pipeline runs automatically and the brief is waiting before the account owner asks for it. That needs Claude connected to the team's calendar/CRM to watch for the event, which is out of scope for this exercise — so today, the account owner triggers it with one click instead.
+**\*Where this goes next (not built):** ideally this fires itself — the moment a meeting lands on the calendar or a CRM stage flips to "meeting set," the same pipeline runs automatically and sends the brief to Slack, email, or both, waiting before the account owner asks for it. That needs Claude connected to the team's calendar/CRM to watch for the event, which is out of scope for this exercise — so today, the account owner triggers it with one click instead.
 
 Run it (needs `ANTHROPIC_API_KEY` set):
 
@@ -99,10 +99,6 @@ Browser click → fetch('/api/generate-brief?account=...')
 Deployed with GitHub → Vercel, zero configuration: push to `main` and Vercel auto-detects the static HTML at the root plus the one function in `api/`, installing its single dependency from `package.json`. The only manual step is the `ANTHROPIC_API_KEY` environment variable, set in the Vercel project itself (not in this repo — neither the Python nor the JS pipeline ever hardcodes a key).
 
 Only real accounts from the dataset are accepted — `getAccount()` throws on anything else — so the account name can't be used to inject arbitrary text into the prompt.
-
-## How this connects to Part 2
-
-`build_prompt()` in `agent_account_brief.py` is the exact dynamic-prompt-assembly logic — parameterized on account, contacts, signals, and constraint — that Part 2 opens the hood on live: those become `{{variables}}` in Claude Console, and the constraint becomes the panel's curveball.
 
 ## Assumptions
 
