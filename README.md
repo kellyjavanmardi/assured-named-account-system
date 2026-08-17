@@ -28,7 +28,8 @@ A view the CEO and Head of Sales can read in under five minutes and immediately 
 
 - **Act Now This Week** — accounts with intent ≥ 60 and zero meetings booked, plus any account carrying a stale CAIO (Chief AI Officer) risk signal — a new AI decision-maker hired in, with no contact on record for that persona yet.
 - **Protect & Expand** — accounts already in an Expansion deal stage.
-- Full sortable/filterable account grid, a pilot-status mini table, and a "Generate Brief" preview button on six accounts that opens a hand-written, dataset-grounded example of what the agent below produces — clearly labeled **"Agent Preview — Not a Live Call"** since a published Artifact page can't safely make live, authenticated API calls (no server-side secret storage, CSP blocks arbitrary `fetch()`).
+- Full sortable/filterable account grid and a pilot-status mini table.
+- A "Generate Brief" button on six accounts that opens a preview of what the **real agent below** produces for that account — clearly labeled **"Agent Preview — Not a Live Call"** because a published Artifact page can't safely hold an API key or make live authenticated calls (no server-side secret storage, CSP blocks arbitrary `fetch()`). The preview text is hand-written to match those six accounts' real data exactly; the agent that actually generates this kind of brief from scratch is a separate, fully working system — see **The agent**, below, and run it yourself with `python agent_account_brief.py`.
 
 Styling pulls real hex values from assured.com's brand palette, mapped consistently to meaning across the whole page (e.g. magenta = act-now/no-meeting, orange = CAIO-risk specifically, red = cooling/closed-lost only) — not decorative color, every color is a label.
 
@@ -54,6 +55,17 @@ Retrieve → Quality Gate → Assemble Prompt → Call Claude → Validate Groun
 **Guardrails** enforced in the system prompt — every cited signal must literally exist in the input (checked as exact `(date, type, detail)` set membership post-hoc, not fuzzy-matched); no coverage/liability/claims-outcome determinations; no unsupported ROI/timeline/compliance promises; never reference another carrier's data.
 
 **Output** is a structured JSON brief (`output_config.format: json_schema`, all fields required, `additionalProperties: false`) — not free text — so it can be rendered, logged, or piped into CRM/Slack without a parsing layer.
+
+**Scheduling & observability** (designed in `agent-architecture.html`, not wired to live infra — see Assumptions):
+
+| | |
+|---|---|
+| Weekly batch | Sun 18:00 ET — Act Now + Pilots list, ahead of Monday review |
+| On-demand | A CRM webhook (meeting booked) fires a single synchronous call |
+| Delivery | Slack + CRM note to the account owner |
+| Eval | 5-account golden set, hand-graded, scored weekly by Claude-as-judge |
+| Alerting | Grounding-check failure rate > 5% pages the on-call owner |
+| Logging | Every run logs input, output, prompt version, latency, and token cost |
 
 Run it (needs `ANTHROPIC_API_KEY` set):
 
