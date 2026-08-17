@@ -18,7 +18,7 @@
 | `assured-system.html` | Both of the above combined into one tabbed page (what's published at the link) |
 | `agent_account_brief.py` | The agent itself — real, tested Python, not pseudocode |
 | `data/assured_data.json` | The provided dataset, as consumed by both the dashboard and the agent |
-| `api/generate-brief.py` | Vercel serverless function — the real backend behind the dashboard's button |
+| `api/generate_brief.py` | Vercel serverless function — the real backend behind the dashboard's button |
 | `api/requirements.txt` | One dependency: the `anthropic` SDK — scoped to `api/`, not the repo root, so Vercel treats this as a static site with one function, not a Python framework app |
 | `vercel.json` | Routes `/` to `assured-system.html`; the rest is Vercel's zero-config Python + static handling |
 
@@ -87,10 +87,10 @@ By default this generates a real brief for Progressive under the `champion_armin
 
 The dashboard's button had to actually call Claude live, not fake it — but a static page (like a published claude.ai Artifact) has nowhere safe to hold an API key: anything in client-side JS is visible to anyone who opens dev tools, regardless of hosting. Plain static hosting doesn't fix that either.
 
-The real fix: `api/generate-brief.py` is a Vercel serverless function. It holds `ANTHROPIC_API_KEY` as a server-side environment variable — never sent to the browser — and runs `run_account_brief()` from `agent_account_brief.py` for real, for whichever account you click. The dashboard's button calls `GET /api/generate-brief?account=<name>`, same-origin, and renders whatever comes back in the agent's real output contract.
+The real fix: `api/generate_brief.py` is a Vercel serverless function. It holds `ANTHROPIC_API_KEY` as a server-side environment variable — never sent to the browser — and runs `run_account_brief()` from `agent_account_brief.py` for real, for whichever account you click. The dashboard's button calls `GET /api/generate_brief?account=<name>`, same-origin, and renders whatever comes back in the agent's real output contract.
 
 ```
-Browser click → fetch('/api/generate-brief?account=...')
+Browser click → fetch('/api/generate_brief?account=...')
              → Vercel Function (holds the API key)
              → run_account_brief() → claude-opus-5
              → JSON brief back to the browser

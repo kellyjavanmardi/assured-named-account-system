@@ -7,7 +7,7 @@ retrieve -> quality gate -> assemble prompt -> call Claude -> validate
 grounding -> respond. The Anthropic API key lives only here, as a Vercel
 environment variable — it is never sent to the browser.
 
-GET /api/generate-brief?account=<name>&constraint=<optional>
+GET /api/generate_brief?account=<name>&constraint=<optional>
 """
 
 from http.server import BaseHTTPRequestHandler
