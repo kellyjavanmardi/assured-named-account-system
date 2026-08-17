@@ -19,7 +19,7 @@
 | `agent_account_brief.py` | The agent itself — real, tested Python, not pseudocode |
 | `data/assured_data.json` | The provided dataset, as consumed by both the dashboard and the agent |
 | `api/generate_brief.py` | Vercel serverless function — the real backend behind the dashboard's button |
-| `api/requirements.txt` | One dependency: the `anthropic` SDK — scoped to `api/`, not the repo root, so Vercel treats this as a static site with one function, not a Python framework app |
+| `pyproject.toml` | Declares the one dependency (`anthropic`) and points Vercel at the function's exact entrypoint |
 | `vercel.json` | Routes `/` to `assured-system.html`; the rest is Vercel's zero-config Python + static handling |
 
 Dashboard and agent read from the **same JSON snapshot**, so both surfaces are provably looking at one source of truth.
@@ -75,7 +75,7 @@ Trigger (dashboard button) → Retrieve → Quality Gate → Assemble Prompt →
 Run it (needs `ANTHROPIC_API_KEY` set):
 
 ```bash
-pip install -r api/requirements.txt
+pip install anthropic
 python agent_account_brief.py
 ```
 
