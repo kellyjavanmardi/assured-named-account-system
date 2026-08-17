@@ -35,7 +35,7 @@ A view the CEO and Head of Sales can read in under five minutes and immediately 
 - Full sortable/filterable account grid and a pilot-status mini table.
 - A "Generate Brief" button on every Act Now, Protect & Expand, and Pilots-in-Flight account — a real, live call to the agent below, not a canned preview. Click it and it retrieves that account's real contacts and signals, runs the quality gate, and calls claude-opus-5 in front of you. See **Live deploy**, below, for how that's wired up safely.
 
-Styling pulls real hex values from assured.com's brand palette, mapped consistently to meaning across the whole page (e.g. magenta = act-now/no-meeting, orange = CAIO-risk specifically, red = cooling/closed-lost only) — not decorative color, every color is a label.
+Styling pulls real hex values from assured.com's brand palette.
 
 ![Dashboard](screenshots/dashboard.png)
 
