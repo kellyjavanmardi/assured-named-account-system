@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 from urllib.parse import parse_qs
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from agent_account_brief import run_account_brief
 
