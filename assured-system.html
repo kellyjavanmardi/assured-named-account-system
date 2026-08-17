@@ -353,6 +353,10 @@
   .dq-card .trigger { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--serious); margin-bottom: 6px; }
   .dq-card .behavior { font-size: 12.5px; color: var(--ink-secondary); line-height: 1.5; }
 
+  .future-card { background: var(--surface); border: 1px dashed var(--border); border-radius: 14px; padding: 14px 16px; margin-top: 12px; }
+  .future-card .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--spec-violet); margin-bottom: 6px; }
+  .future-card .body { font-size: 12.5px; color: var(--ink-secondary); line-height: 1.5; }
+
   .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
   .stat-tile { background: var(--surface); border: 1px solid var(--border); border-top: 3px solid; border-radius: 14px; padding: 13px 15px; box-shadow: var(--card-shadow); }
   .stat-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted); font-weight: 700; margin-bottom: 5px; }
@@ -483,12 +487,12 @@
   <div id="page-agent" class="page">
 <div class="hero-band">
     <h1>Account-Brief Generator</h1>
-    <p class="hero-sub">A system that turns the dashboard's "act now" list into a grounded, pre-meeting brief and next-best-action for every account owner — on a schedule, not a chat window.</p>
+    <p class="hero-sub">A system that turns one dashboard click into a grounded, pre-meeting brief and next-best-action for the account owner — on demand, not a chat window.</p>
   </div>
 
   <div class="connect-banner">
     <span class="connect-icon">↳</span>
-    <div><b>How this connects to Part 1's dashboard:</b> the weekly batch below runs on exactly the accounts the dashboard's Act Now and Pilots in Flight sections surface — same query, same source of truth. Every <code class="inline">Momentum Signal</code> the dashboard shows as "why now" is the same field this agent's prompt reads. Part 2 is this system's <code class="inline">build_prompt()</code> function, opened up and run live for whichever account the panel picks.</div>
+    <div><b>How this connects to Part 1's dashboard:</b> the "Generate Brief" button on any account is this system's front door — it fires on exactly the account you're looking at, using the same <code class="inline">Momentum Signal</code> field the dashboard already shows as "why now." Same query, same source of truth, one click apart. Part 2 is this system's <code class="inline">build_prompt()</code> function, opened up and run live for whichever account the panel picks.</div>
   </div>
 
   <section class="block">
@@ -504,9 +508,11 @@
   <section class="block">
     <div class="block-head">
       <div class="block-title"><span class="dot" style="background:var(--spec-blue)"></span>Orchestration Pipeline</div>
-      <div class="block-desc">Retrieve → gate → assemble → call → validate → deliver → log</div>
+      <div class="block-desc">Trigger → retrieve → gate → assemble → call → validate → deliver → log</div>
     </div>
     <div class="pipeline">
+      <div class="pipe-step"><div class="num">00</div><div class="title">Trigger</div><div class="desc">Account owner clicks "Generate Brief" on the dashboard — one account, on demand</div></div>
+      <div class="pipe-arrow">→</div>
       <div class="pipe-step"><div class="num">01</div><div class="title">Retrieve</div><div class="desc">Join account + contacts + signals from the warehouse (mirrors the dashboard's own query)</div></div>
       <div class="pipe-arrow">→</div>
       <div class="pipe-step"><div class="num">02</div><div class="title">Quality Gate</div><div class="desc">Check for thin data <i>before</i> spending a model call — route to fallback if unusable</div></div>
@@ -517,7 +523,7 @@
       <div class="pipe-arrow">→</div>
       <div class="pipe-step"><div class="num">05</div><div class="title">Validate Grounding</div><div class="desc">Every cited signal must trace to one actually in the input, or it's rejected</div></div>
       <div class="pipe-arrow">→</div>
-      <div class="pipe-step"><div class="num">06</div><div class="title">Deliver + Log</div><div class="desc">Slack + CRM note to the account owner; full run logged to an eval table</div></div>
+      <div class="pipe-step"><div class="num">06</div><div class="title">Deliver + Log</div><div class="desc">Rendered straight back to the account owner in the dashboard; full run logged to an eval table</div></div>
     </div>
   </section>
 
@@ -607,14 +613,18 @@
 
   <section class="block">
     <div class="block-head">
-      <div class="block-title"><span class="dot" style="background:var(--spec-gold)"></span>Scheduling &amp; Observability</div>
+      <div class="block-title"><span class="dot" style="background:var(--spec-gold)"></span>Trigger &amp; Observability</div>
+      <div class="block-desc">One trigger today, on demand — not a batch job</div>
     </div>
     <div class="stat-row">
-      <div class="stat-tile" style="border-top-color:var(--spec-blue)"><div class="stat-label">Weekly Batch</div><div class="stat-value">Sun 18:00 ET</div><div class="stat-sub">Act Now + Pilots list, ahead of Monday review</div></div>
-      <div class="stat-tile" style="border-top-color:var(--spec-magenta)"><div class="stat-label">On-Demand</div><div class="stat-value">Meeting booked</div><div class="stat-sub">CRM webhook fires a single synchronous call</div></div>
+      <div class="stat-tile" style="border-top-color:var(--spec-magenta)"><div class="stat-label">Trigger</div><div class="stat-value">Dashboard button</div><div class="stat-sub">Account owner clicks Generate Brief; runs synchronously, ready in seconds</div></div>
       <div class="stat-tile" style="border-top-color:var(--spec-violet)"><div class="stat-label">Golden Set</div><div class="stat-value">5 accounts</div><div class="stat-sub">Hand-graded, scored weekly by Claude-as-judge</div></div>
       <div class="stat-tile" style="border-top-color:var(--spec-gold)"><div class="stat-label">Alerting</div><div class="stat-value">&gt;5% fail rate</div><div class="stat-sub">Grounding-check failures page the on-call owner</div></div>
       <div class="stat-tile" style="border-top-color:var(--spec-orange)"><div class="stat-label">Every run logs</div><div class="stat-value">input · output</div><div class="stat-sub">+ prompt version, latency, token cost</div></div>
+    </div>
+    <div class="future-card">
+      <div class="label">Where this goes next — not built</div>
+      <div class="body">Ideally this fires itself: the moment a meeting lands on the calendar or a CRM stage flips to "meeting set," the same pipeline runs automatically and the brief is waiting before the account owner asks for it. That needs Claude connected to the team's calendar/CRM to watch for the event — out of scope here, so today the account owner triggers it with one click instead.</div>
     </div>
   </section>
 

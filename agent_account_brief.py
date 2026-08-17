@@ -4,6 +4,10 @@ Assured — Account-Brief Generator (Part 1 agent)
 A system, not a one-off chat: retrieve -> data-quality gate -> assemble
 prompt -> call Claude -> validate grounding -> deliver -> log.
 
+Triggered on demand, one account at a time, by the "Generate Brief"
+button on the dashboard — run_account_brief() below is exactly what that
+click calls. Not a batch job.
+
 build_prompt() below is the function Part 2 opens the hood on: it is the
 exact dynamic-prompt-assembly logic, parameterized on account/contacts/
 signals/constraint, that this script calls in step 5 of run_account_brief().

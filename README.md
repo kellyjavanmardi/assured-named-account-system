@@ -42,7 +42,7 @@ Styling pulls real hex values from assured.com's brand palette, mapped consisten
 Rather than building three separate agents for the brief's three next-best-action options, next-best-action adapts via a single `constraint` parameter — `champion_arming`, `save_play`, or `expansion_push` — that changes what the prompt asks for without changing the pipeline.
 
 ```
-Retrieve → Quality Gate → Assemble Prompt → Call Claude → Validate Grounding → Deliver + Log
+Trigger (dashboard button) → Retrieve → Quality Gate → Assemble Prompt → Call Claude → Validate Grounding → Deliver + Log
 ```
 
 **Quality gate** — routes to human review instead of guessing when there's nothing to ground a brief in, and flags (rather than blocks) partial-data cases:
@@ -56,16 +56,17 @@ Retrieve → Quality Gate → Assemble Prompt → Call Claude → Validate Groun
 
 **Output** is a structured JSON brief (`output_config.format: json_schema`, all fields required, `additionalProperties: false`) — not free text — so it can be rendered, logged, or piped into CRM/Slack without a parsing layer.
 
-**Scheduling & observability** (designed in `agent-architecture.html`, not wired to live infra — see Assumptions):
+**Trigger & observability** (designed in `agent-architecture.html`, not wired to live infra — see Assumptions). Deliberately one trigger, not a batch job: the dashboard's "Generate Brief" button *is* the front door — clicking it on any account is what calls `run_account_brief()` for that account, synchronously, in seconds.
 
 | | |
 |---|---|
-| Weekly batch | Sun 18:00 ET — Act Now + Pilots list, ahead of Monday review |
-| On-demand | A CRM webhook (meeting booked) fires a single synchronous call |
-| Delivery | Slack + CRM note to the account owner |
+| Trigger | Dashboard button click — one account, on demand |
+| Delivery | Rendered straight back to the account owner in the dashboard |
 | Eval | 5-account golden set, hand-graded, scored weekly by Claude-as-judge |
 | Alerting | Grounding-check failure rate > 5% pages the on-call owner |
 | Logging | Every run logs input, output, prompt version, latency, and token cost |
+
+**\*Where this goes next (not built):** ideally this fires itself — the moment a meeting lands on the calendar or a CRM stage flips to "meeting set," the same pipeline runs automatically and the brief is waiting before the account owner asks for it. That needs Claude connected to the team's calendar/CRM to watch for the event, which is out of scope for this exercise — so today, the account owner triggers it with one click instead.
 
 Run it (needs `ANTHROPIC_API_KEY` set):
 
@@ -85,11 +86,10 @@ By default this generates a real brief for Progressive under the `champion_armin
 ## Assumptions
 
 - **Retrieval** is a static JSON snapshot standing in for three nightly-synced warehouse tables (6sense, Clay, influ2, HockeyStack) — same shape, no live warehouse connection assumed.
-- **Scheduling/delivery infra** (cron trigger, Slack post, CRM write-back) is designed, not wired to live systems — described in the architecture doc as a credible plan rather than mocked code.
+- **Trigger** is the dashboard's "Generate Brief" button, one account at a time — not a batch/cron job. Designed, not wired to live infra — described in the architecture doc as a credible plan rather than mocked code.
 - **Model choice**: `claude-opus-5`, with extended thinking explicitly disabled (`thinking: {"type": "disabled"}`) — this is a bounded structured-generation task, not open-ended reasoning, and thinking otherwise shares the token budget with the JSON output.
 - **"Recent" signal** = 45-day lookback window.
 - **"Top contacts"** = ranked by seniority (C-Suite → Director) then by engagement, capped at 3.
-- **Delivery target** = the account's `Account Owner` field.
 
 ---
 
