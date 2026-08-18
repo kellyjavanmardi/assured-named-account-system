@@ -533,7 +533,7 @@
     const isNoMeeting = a['Intent (0-100)'] >= 60 && a['Meetings QTD'] === 0;
     let nba;
     if (risk) nba = 'Arm champion with build-vs-buy objection prep.';
-    else if (isNoMeeting) nba = 'Book a discovery meeting this week.';
+    else if (isNoMeeting) nba = a['Open Pipeline ($)'] > 0 ? 'Book a re-engagement call this week.' : 'Book a discovery meeting this week.';
     else nba = 'Protect the pilot — schedule a check-in.';
 
     const reasonTag = risk
