@@ -114,6 +114,22 @@ const BRIEF_SCHEMA = {
       type: "string",
       description: "1-2 sentences: where this account is and why it matters this week.",
     },
+    next_best_action: {
+      type: "object",
+      properties: {
+        action: {
+          type: "string",
+          description: "1-2 sentences: the specific move to make, concrete enough to act on immediately.",
+        },
+        rationale: {
+          type: "string",
+          description: "1 sentence: why this is the right move, grounded in the data above.",
+        },
+      },
+      required: ["action", "rationale"],
+      additionalProperties: false,
+    },
+    confidence: { type: "string", enum: ["high", "medium", "low"] },
     key_signals: {
       type: "array",
       items: {
@@ -141,29 +157,13 @@ const BRIEF_SCHEMA = {
       description:
         "2-3 sentences, scannable in seconds. Name whichever the data actually supports — a real risk, a real opportunity, or both if the account genuinely has each. Don't force a risk where there isn't one, and don't skip a real risk just because there's also good news.",
     },
-    next_best_action: {
-      type: "object",
-      properties: {
-        action: {
-          type: "string",
-          description: "1-2 sentences: the specific move to make, concrete enough to act on immediately.",
-        },
-        rationale: {
-          type: "string",
-          description: "1 sentence: why this is the right move, grounded in the data above.",
-        },
-      },
-      required: ["action", "rationale"],
-      additionalProperties: false,
-    },
-    confidence: { type: "string", enum: ["high", "medium", "low"] },
     data_gaps: {
       type: "array",
       items: { type: "string" },
       description: "Anything the brief could NOT verify — stale roster, no signal in window, etc.",
     },
   },
-  required: ["account", "situation_summary", "key_signals", "risk_or_opportunity", "next_best_action", "confidence", "data_gaps"],
+  required: ["account", "situation_summary", "next_best_action", "confidence", "key_signals", "risk_or_opportunity", "data_gaps"],
   additionalProperties: false,
 };
 
