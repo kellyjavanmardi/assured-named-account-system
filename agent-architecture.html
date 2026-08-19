@@ -172,7 +172,7 @@
       <div class="pipe-arrow">→</div>
       <div class="pipe-step"><div class="num">02</div><div class="title">Quality Gate</div><div class="desc">Check for thin data <i>before</i> spending a model call — route to fallback if unusable</div></div>
       <div class="pipe-arrow">→</div>
-      <div class="pipe-step"><div class="num">03</div><div class="title">Assemble Prompt</div><div class="desc"><code class="inline">build_prompt()</code> — parameterized on account/contacts/signals/constraint</div></div>
+      <div class="pipe-step"><div class="num">03</div><div class="title">Assemble Prompt</div><div class="desc"><code class="inline">build_prompt()</code> — parameterized on account/contacts/signals/quality flags/constraint</div></div>
       <div class="pipe-arrow">→</div>
       <div class="pipe-step"><div class="num">04</div><div class="title">Call Claude</div><div class="desc">claude-opus-5, output schema enforced via structured outputs — not a prompt instruction</div></div>
       <div class="pipe-arrow">→</div>
@@ -202,14 +202,14 @@
         <pre class="schema">{
   <span class="k">"account"</span>: <span class="s">string</span>,
   <span class="k">"situation_summary"</span>: <span class="s">string</span>,
-  <span class="k">"key_signals"</span>: [
-    { <span class="k">"date"</span>, <span class="k">"type"</span>, <span class="k">"detail"</span> }
-  ], <span class="c">// must trace to input</span>
-  <span class="k">"risk_or_opportunity"</span>: <span class="s">string</span>,
   <span class="k">"next_best_action"</span>: {
     <span class="k">"action"</span>, <span class="k">"rationale"</span>
   },
   <span class="k">"confidence"</span>: <span class="s">"high"|"medium"|"low"</span>,
+  <span class="k">"key_signals"</span>: [
+    { <span class="k">"date"</span>, <span class="k">"type"</span>, <span class="k">"detail"</span> }
+  ], <span class="c">// must trace to input</span>
+  <span class="k">"risk_or_opportunity"</span>: <span class="s">string</span>,
   <span class="k">"data_gaps"</span>: [<span class="s">string</span>]
 }</pre>
       </div>
@@ -224,7 +224,7 @@
     <div class="dq-grid">
       <div class="dq-card" style="border-left-color:var(--spec-red)">
         <div class="trigger" style="color:var(--spec-red)">Not grounded</div>
-        <div class="behavior">System prompt: never invent a signal, date, contact, or number. Enforced twice — once as an instruction, once by <code class="inline">validate_grounding()</code> checking every cited signal against the real input after generation.</div>
+        <div class="behavior">System prompt: never invent a signal, date, contact, or number. Signal citations get a second, code-level check — <code class="inline">validate_grounding()</code> verifies every entry in <code class="inline">key_signals</code> against the real input after generation; everything else relies on the prompt instruction alone.</div>
       </div>
       <div class="dq-card" style="border-left-color:var(--spec-red)">
         <div class="trigger" style="color:var(--spec-red)">Carrier compliance</div>
